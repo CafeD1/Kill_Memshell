@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -9,6 +10,8 @@ import javax.swing.table.TableModel;
 //import com.jgoodies.forms.factories.*;
 //import com.jgoodies.forms.layout.*;
 //import net.miginfocom.swing.*;
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
 import org.cafedi.util.JvmProcessList;
 //import org.jdesktop.swingx.*;
 /*
@@ -88,6 +91,22 @@ public class gui extends JFrame {
                     "进程详情 - PID: " + pid,
                     JOptionPane.INFORMATION_MESSAGE
             );
+        }
+    }
+
+    private void attach(ActionEvent e) throws IOException, AttachNotSupportedException {
+        //获取选中的行索引
+        int selectedRow = jvmTable.getSelectedRow();
+        if(selectedRow!=-1){
+            // 获取第一列（索引为 0）的值,即PID
+            Object value = jvmTable.getValueAt(selectedRow,0);
+            //转为字符串参数
+            String param = value.toString();
+            //日志显示
+            statusTextArea.append("开始Attach进程"+param+"\n");
+            VirtualMachine.attach(param);
+        }else {
+            JOptionPane.showMessageDialog(null,"请先选择表格中的一行");
         }
     }
 
