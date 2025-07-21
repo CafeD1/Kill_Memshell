@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
@@ -9,6 +10,8 @@ import javax.swing.table.TableModel;
 //import com.jgoodies.forms.factories.*;
 //import com.jgoodies.forms.layout.*;
 //import net.miginfocom.swing.*;
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
 import org.cafedi.util.JvmProcessList;
 //import org.jdesktop.swingx.*;
 /*
@@ -91,15 +94,32 @@ public class gui extends JFrame {
         }
     }
 
+    private void attach(ActionEvent e) throws IOException, AttachNotSupportedException {
+        //获取选中的行索引
+        int selectedRow = jvmTable.getSelectedRow();
+        if(selectedRow!=-1){
+            // 获取第一列（索引为 0）的值,即PID
+            Object value = jvmTable.getValueAt(selectedRow,0);
+            //转为字符串参数
+            String param = value.toString();
+            //日志显示
+            statusTextArea.append("开始Attach进程"+param+"\n");
+            VirtualMachine.attach(param);
+        }else {
+            JOptionPane.showMessageDialog(null,"请先选择表格中的一行");
+        }
+    }
+
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         panel1 = new JPanel();
         GetJVMProcess = new JButton();
-        scrollPane2 = new JScrollPane();
-        jvmTable = new JTable();
         scrollPane1 = new JScrollPane();
         statusTextArea = new JTextArea();
+        scrollPane2 = new JScrollPane();
+        jvmTable = new JTable();
+        attach = new JButton();
 
         //======== this ========
         setTitle(bundle.getString("gui.this.title"));
@@ -111,6 +131,11 @@ public class gui extends JFrame {
             //---- GetJVMProcess ----
             GetJVMProcess.setText(bundle.getString("gui.GetJVMProcess.text"));
             GetJVMProcess.addActionListener(e -> GetJVMProcess(e));
+
+            //======== scrollPane1 ========
+            {
+                scrollPane1.setViewportView(statusTextArea);
+            }
 
             //======== scrollPane2 ========
             {
@@ -125,27 +150,38 @@ public class gui extends JFrame {
                 scrollPane2.setViewportView(jvmTable);
             }
 
-            //======== scrollPane1 ========
-            {
-                scrollPane1.setViewportView(statusTextArea);
-            }
+            //---- attach ----
+            attach.setText(bundle.getString("gui.attach.text"));
+            attach.addActionListener(e -> {try {
+attach(e);} catch (IOException ex) {
+    throw new RuntimeException(ex);
+} catch (AttachNotSupportedException ex) {
+    throw new RuntimeException(ex);
+}});
 
             GroupLayout panel1Layout = new GroupLayout(panel1);
             panel1.setLayout(panel1Layout);
             panel1Layout.setHorizontalGroup(
                 panel1Layout.createParallelGroup()
-                    .addComponent(GetJVMProcess, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 189, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(scrollPane1)
+                    .addGroup(panel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(panel1Layout.createParallelGroup(GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(scrollPane2, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(scrollPane1, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(GetJVMProcess, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(attach, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
+                        .addGap(0, 10, Short.MAX_VALUE))
             );
             panel1Layout.setVerticalGroup(
                 panel1Layout.createParallelGroup()
                     .addGroup(panel1Layout.createSequentialGroup()
-                        .addComponent(GetJVMProcess, GroupLayout.PREFERRED_SIZE, 44, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(GetJVMProcess, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 318, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(attach, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 187, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(scrollPane1, GroupLayout.DEFAULT_SIZE, 176, Short.MAX_VALUE)
                         .addContainerGap())
             );
         }
@@ -156,11 +192,11 @@ public class gui extends JFrame {
             contentPaneLayout.createParallelGroup()
                 .addGroup(contentPaneLayout.createSequentialGroup()
                     .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(319, Short.MAX_VALUE))
+                    .addGap(0, 416, Short.MAX_VALUE))
         );
         contentPaneLayout.setVerticalGroup(
             contentPaneLayout.createParallelGroup()
-                .addComponent(panel1, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         pack();
         setLocationRelativeTo(getOwner());
@@ -170,9 +206,10 @@ public class gui extends JFrame {
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel panel1;
     private JButton GetJVMProcess;
-    private JScrollPane scrollPane2;
-    private JTable jvmTable;
     private JScrollPane scrollPane1;
     private JTextArea statusTextArea;
+    private JScrollPane scrollPane2;
+    private JTable jvmTable;
+    private JButton attach;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }
