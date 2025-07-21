@@ -152,12 +152,7 @@ public class gui extends JFrame {
 
             //---- attach ----
             attach.setText(bundle.getString("gui.attach.text"));
-            attach.addActionListener(e -> {try {
-attach(e);} catch (IOException ex) {
-    throw new RuntimeException(ex);
-} catch (AttachNotSupportedException ex) {
-    throw new RuntimeException(ex);
-}});
+            attach.addActionListener(e -> attach(e));
 
             GroupLayout panel1Layout = new GroupLayout(panel1);
             panel1.setLayout(panel1Layout);
