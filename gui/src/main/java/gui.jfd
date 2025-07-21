@@ -1,0 +1,44 @@
+JFDML JFormDesigner: "8.2.4.0.393" Java: "17.0.11" encoding: "UTF-8"
+
+new FormModel {
+	"i18n.autoExternalize": true
+	"i18n.bundleName": "config"
+	"i18n.keyPrefix": "gui"
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+			"$horizontalGroup": "par l {seq l {comp panel1:::p::p, space ::319:x}}"
+			"$verticalGroup": "par l {comp panel1::l::404:x}"
+		} ) {
+			name: "this"
+			"title": new FormMessage( null, "gui.this.title" )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+				"$horizontalGroup": "par l {comp GetJVMProcess:::::x, comp scrollPane2:::p:189:p, comp scrollPane1::l:::x}"
+				"$verticalGroup": "par l {seq l {comp GetJVMProcess:::p:44:p, space :::p, comp scrollPane1:::p:35:p, space :::x, comp scrollPane2:::p:318:p, space :::p}}"
+			} ) {
+				name: "panel1"
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "GetJVMProcess"
+					"text": new FormMessage( null, "gui.GetJVMProcess.text" )
+					addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "GetJVMProcess", true ) )
+				} )
+				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+					name: "scrollPane2"
+					add( new FormComponent( "javax.swing.JTable" ) {
+						name: "jvmTable"
+						addEvent( new FormEvent( "java.awt.event.MouseListener", "mouseClicked", "jvmTableMouseClicked", true ) )
+					} )
+				} )
+				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+					name: "scrollPane1"
+					add( new FormComponent( "javax.swing.JTextArea" ) {
+						name: "statusTextArea"
+					} )
+				} )
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 130, 55 )
+			"size": new java.awt.Dimension( 510, 435 )
+		} )
+	}
+}
