@@ -1,16 +1,15 @@
-package org.cafedi.agent;
-
-import sun.rmi.runtime.Log;
+package org.cafedi;
 
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
 
 public class MemShellScannerAgent {
     public static void agentmain(String args, Instrumentation inst) {
+        //枚举所有已加载类
         Class[] classes = inst.getAllLoadedClasses();
-        String[] keywords = {"shell", "proxy", "evil", "inject"};
+        String[] keywords = {"shell", "proxy", "evil", "inject","mem"};
         for (Class<?> clazz: classes) {
-            String className = clazz.getName();
+            String className = clazz.getName().toLowerCase();
             Boolean suspicious = false;
             // 1. 类名关键字检测
             for (String keyword: keywords) {
@@ -43,5 +42,6 @@ public class MemShellScannerAgent {
 
         // 4. 可疑方法判断
     }
+    public static void premain(String agentArgs, Instrumentation inst) {}
 
 }

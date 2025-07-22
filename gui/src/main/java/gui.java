@@ -1,15 +1,22 @@
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.*;
+import javax.swing.event.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 //import com.jgoodies.forms.factories.*;
 //import com.jgoodies.forms.layout.*;
 //import net.miginfocom.swing.*;
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import org.cafedi.util.JvmProcessList;
@@ -26,16 +33,16 @@ import org.cafedi.util.JvmProcessList;
 public class gui extends JFrame {
     public gui() {
         initComponents();
+        //设置JList标签
+        FrameList.setListData(new String[]{"Tomcat", "SpringBoot"});
+        // 设置单选模式
+        FrameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
 
     public static void main(String[] args) {
         new gui().setVisible(true);
     }
-    private void setupCustomComponents(){
-        //自定义表格模型
-    }
     private void GetJVMProcess(ActionEvent e) {
-        // TODO add your code here
         statusTextArea.append("正在获取JVM进程列表...\n");
         JvmProcessList jvm = new JvmProcessList();
         List<Map.Entry<String,String>> jvmentries = jvm.GetJVMProcessList();
@@ -74,7 +81,6 @@ public class gui extends JFrame {
     }
 
     private void jvmTableMouseClicked(MouseEvent e) {
-        // TODO add your code here
         if(e.getClickCount()==2){
             int row = jvmTable.rowAtPoint(e.getPoint());
             String pid = jvmTable.getValueAt(row,0).toString();
@@ -94,7 +100,7 @@ public class gui extends JFrame {
         }
     }
 
-    private void attach(ActionEvent e) throws IOException, AttachNotSupportedException {
+    private void attach(ActionEvent e) throws IOException, AttachNotSupportedException, AgentLoadException, AgentInitializationException {
         //获取选中的行索引
         int selectedRow = jvmTable.getSelectedRow();
         if(selectedRow!=-1){
@@ -104,10 +110,37 @@ public class gui extends JFrame {
             String param = value.toString();
             //日志显示
             statusTextArea.append("开始Attach进程"+param+"\n");
-            VirtualMachine.attach(param);
+            VirtualMachine vm = VirtualMachine.attach(param);
+            Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
+            String path = "";
+            if (Files.exists(agentpath)){
+                path = agentpath.toAbsolutePath().toString();
+            }else{
+                statusTextArea.append("请检查agent文件是否存在");
+            }
+            vm.loadAgent(path);
+            vm.detach();
+
         }else {
             JOptionPane.showMessageDialog(null,"请先选择表格中的一行");
         }
+    }
+
+    private void FrameListValueChanged(ListSelectionEvent e) {
+        if(e.getValueIsAdjusting()){
+            //获取选择
+            String select = (String) FrameList.getSelectedValue();
+            CardLayout cl = (CardLayout)(panelCards.getLayout());
+            // 根据选择切换卡片视图
+            switch (select){
+                case "Tomcat":
+                    cl.show(panelCards,"tomcat");
+                    break;
+                case "SpringBoot":
+                    cl.show(panelCards,"springboot");
+                    break;
+            }
+       }
     }
 
     private void initComponents() {
@@ -115,10 +148,22 @@ public class gui extends JFrame {
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         panel1 = new JPanel();
         GetJVMProcess = new JButton();
-        scrollPane2 = new JScrollPane();
-        jvmTable = new JTable();
         scrollPane1 = new JScrollPane();
         statusTextArea = new JTextArea();
+        scrollPane2 = new JScrollPane();
+        jvmTable = new JTable();
+        attach = new JButton();
+        detail = new JSplitPane();
+        scrollPane3 = new JScrollPane();
+        FrameList = new JList();
+        panelCards = new JPanel();
+        tabTomcat = new JTabbedPane();
+        listener = new JPanel();
+        filter = new JPanel();
+        servlet = new JPanel();
+        tabSpringBoot = new JTabbedPane();
+        controller = new JPanel();
+        interceptor = new JPanel();
 
         //======== this ========
         setTitle(bundle.getString("gui.this.title"));
@@ -130,6 +175,11 @@ public class gui extends JFrame {
             //---- GetJVMProcess ----
             GetJVMProcess.setText(bundle.getString("gui.GetJVMProcess.text"));
             GetJVMProcess.addActionListener(e -> GetJVMProcess(e));
+
+            //======== scrollPane1 ========
+            {
+                scrollPane1.setViewportView(statusTextArea);
+            }
 
             //======== scrollPane2 ========
             {
@@ -144,29 +194,154 @@ public class gui extends JFrame {
                 scrollPane2.setViewportView(jvmTable);
             }
 
-            //======== scrollPane1 ========
-            {
-                scrollPane1.setViewportView(statusTextArea);
-            }
+            //---- attach ----
+            attach.setText(bundle.getString("gui.attach.text"));
+            attach.addActionListener(e -> {try {
+attach(e);} catch (IOException ex) {
+    throw new RuntimeException(ex);
+} catch (AttachNotSupportedException ex) {
+    throw new RuntimeException(ex);
+} catch (AgentLoadException ex) {
+    throw new RuntimeException(ex);
+} catch (AgentInitializationException ex) {
+    throw new RuntimeException(ex);
+}});
 
             GroupLayout panel1Layout = new GroupLayout(panel1);
             panel1.setLayout(panel1Layout);
             panel1Layout.setHorizontalGroup(
                 panel1Layout.createParallelGroup()
-                    .addComponent(GetJVMProcess, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 189, GroupLayout.PREFERRED_SIZE)
-                    .addComponent(scrollPane1)
+                    .addGroup(panel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(panel1Layout.createParallelGroup(GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(scrollPane2, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(scrollPane1, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(GetJVMProcess, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(attach, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
+                        .addGap(0, 10, Short.MAX_VALUE))
             );
             panel1Layout.setVerticalGroup(
                 panel1Layout.createParallelGroup()
                     .addGroup(panel1Layout.createSequentialGroup()
-                        .addComponent(GetJVMProcess, GroupLayout.PREFERRED_SIZE, 44, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(GetJVMProcess, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 35, GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 318, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(attach, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 187, GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(scrollPane1, GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
                         .addContainerGap())
             );
+        }
+
+        //======== detail ========
+        {
+
+            //======== scrollPane3 ========
+            {
+
+                //---- FrameList ----
+                FrameList.setMinimumSize(new Dimension(38, 80));
+                FrameList.addListSelectionListener(e -> FrameListValueChanged(e));
+                scrollPane3.setViewportView(FrameList);
+            }
+            detail.setLeftComponent(scrollPane3);
+
+            //======== panelCards ========
+            {
+                panelCards.setLayout(new CardLayout());
+
+                //======== tabTomcat ========
+                {
+
+                    //======== listener ========
+                    {
+
+                        GroupLayout listenerLayout = new GroupLayout(listener);
+                        listener.setLayout(listenerLayout);
+                        listenerLayout.setHorizontalGroup(
+                            listenerLayout.createParallelGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                        );
+                        listenerLayout.setVerticalGroup(
+                            listenerLayout.createParallelGroup()
+                                .addGap(0, 254, Short.MAX_VALUE)
+                        );
+                    }
+                    tabTomcat.addTab(bundle.getString("gui.listener.tab.title"), listener);
+
+                    //======== filter ========
+                    {
+
+                        GroupLayout filterLayout = new GroupLayout(filter);
+                        filter.setLayout(filterLayout);
+                        filterLayout.setHorizontalGroup(
+                            filterLayout.createParallelGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                        );
+                        filterLayout.setVerticalGroup(
+                            filterLayout.createParallelGroup()
+                                .addGap(0, 254, Short.MAX_VALUE)
+                        );
+                    }
+                    tabTomcat.addTab(bundle.getString("gui.filter.tab.title"), filter);
+
+                    //======== servlet ========
+                    {
+
+                        GroupLayout servletLayout = new GroupLayout(servlet);
+                        servlet.setLayout(servletLayout);
+                        servletLayout.setHorizontalGroup(
+                            servletLayout.createParallelGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                        );
+                        servletLayout.setVerticalGroup(
+                            servletLayout.createParallelGroup()
+                                .addGap(0, 254, Short.MAX_VALUE)
+                        );
+                    }
+                    tabTomcat.addTab(bundle.getString("gui.servlet.tab.title"), servlet);
+                }
+                panelCards.add(tabTomcat, "tomcat");
+
+                //======== tabSpringBoot ========
+                {
+
+                    //======== controller ========
+                    {
+
+                        GroupLayout controllerLayout = new GroupLayout(controller);
+                        controller.setLayout(controllerLayout);
+                        controllerLayout.setHorizontalGroup(
+                            controllerLayout.createParallelGroup()
+                                .addGap(0, 370, Short.MAX_VALUE)
+                        );
+                        controllerLayout.setVerticalGroup(
+                            controllerLayout.createParallelGroup()
+                                .addGap(0, 254, Short.MAX_VALUE)
+                        );
+                    }
+                    tabSpringBoot.addTab(bundle.getString("gui.controller.tab.title"), controller);
+
+                    //======== interceptor ========
+                    {
+
+                        GroupLayout interceptorLayout = new GroupLayout(interceptor);
+                        interceptor.setLayout(interceptorLayout);
+                        interceptorLayout.setHorizontalGroup(
+                            interceptorLayout.createParallelGroup()
+                                .addGap(0, 370, Short.MAX_VALUE)
+                        );
+                        interceptorLayout.setVerticalGroup(
+                            interceptorLayout.createParallelGroup()
+                                .addGap(0, 254, Short.MAX_VALUE)
+                        );
+                    }
+                    tabSpringBoot.addTab(bundle.getString("gui.interceptor.tab.title"), interceptor);
+                }
+                panelCards.add(tabSpringBoot, "springboot");
+            }
+            detail.setRightComponent(panelCards);
         }
 
         GroupLayout contentPaneLayout = new GroupLayout(contentPane);
@@ -175,11 +350,17 @@ public class gui extends JFrame {
             contentPaneLayout.createParallelGroup()
                 .addGroup(contentPaneLayout.createSequentialGroup()
                     .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(319, Short.MAX_VALUE))
+                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 386, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(114, Short.MAX_VALUE))
         );
         contentPaneLayout.setVerticalGroup(
             contentPaneLayout.createParallelGroup()
-                .addComponent(panel1, GroupLayout.DEFAULT_SIZE, 404, Short.MAX_VALUE)
+                .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(contentPaneLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(143, Short.MAX_VALUE))
         );
         pack();
         setLocationRelativeTo(getOwner());
@@ -189,9 +370,21 @@ public class gui extends JFrame {
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel panel1;
     private JButton GetJVMProcess;
-    private JScrollPane scrollPane2;
-    private JTable jvmTable;
     private JScrollPane scrollPane1;
     private JTextArea statusTextArea;
+    private JScrollPane scrollPane2;
+    private JTable jvmTable;
+    private JButton attach;
+    private JSplitPane detail;
+    private JScrollPane scrollPane3;
+    private JList FrameList;
+    private JPanel panelCards;
+    private JTabbedPane tabTomcat;
+    private JPanel listener;
+    private JPanel filter;
+    private JPanel servlet;
+    private JTabbedPane tabSpringBoot;
+    private JPanel controller;
+    private JPanel interceptor;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

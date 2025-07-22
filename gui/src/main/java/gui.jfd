@@ -7,14 +7,14 @@ new FormModel {
 	contentType: "form/swing"
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-			"$horizontalGroup": "par l {seq l {comp panel1:::p::p, space :0:416:x}}"
-			"$verticalGroup": "par l {comp panel1::l:::x}"
+			"$horizontalGroup": "par l {seq l {comp panel1:::p::p, space :::p, comp detail:::p:386:p, space ::114:x}}"
+			"$verticalGroup": "par l {comp panel1:::::x, seq l {space :::p, comp detail:::p:295:p, space ::143:x}}"
 		} ) {
 			name: "this"
 			"title": new FormMessage( null, "gui.this.title" )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
 				"$horizontalGroup": "par l {seq l {space :::p, par t:::p {comp scrollPane2::l::146:x, comp scrollPane1::l::146:x, comp GetJVMProcess::l::146:x, comp attach::t::146:x}, space :0:10:x}}"
-				"$verticalGroup": "par l {seq l {comp GetJVMProcess:::p:26:p, space :::p, comp attach:::p:26:p, space :::p, comp scrollPane2:::p:187:p, space :::p, comp scrollPane1::::176:x, space :::p}}"
+				"$verticalGroup": "par l {seq l {comp GetJVMProcess:::p:26:p, space :::p, comp attach:::p:26:p, space :::p, comp scrollPane2:::p:187:p, space :::p, comp scrollPane1::::181:x, space :::p}}"
 			} ) {
 				name: "panel1"
 				add( new FormComponent( "javax.swing.JButton" ) {
@@ -41,9 +41,77 @@ new FormModel {
 					addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "attach", true ) )
 				} )
 			} )
+			add( new FormContainer( "javax.swing.JSplitPane", new FormLayoutManager( class javax.swing.JSplitPane ) ) {
+				name: "detail"
+				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+					name: "scrollPane3"
+					add( new FormComponent( "javax.swing.JList" ) {
+						name: "FrameList"
+						"minimumSize": new java.awt.Dimension( 38, 80 )
+						addEvent( new FormEvent( "javax.swing.event.ListSelectionListener", "valueChanged", "FrameListValueChanged", true ) )
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "left"
+				} )
+				add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class java.awt.CardLayout ) ) {
+					name: "panelCards"
+					add( new FormContainer( "javax.swing.JTabbedPane", new FormLayoutManager( class javax.swing.JTabbedPane ) ) {
+						name: "tabTomcat"
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+							"$horizontalGroup": "par l {space :0:0:x}"
+							"$verticalGroup": "par l {space :0:254:x}"
+						} ) {
+							name: "listener"
+						}, new FormLayoutConstraints( null ) {
+							"title": new FormMessage( null, "gui.listener.tab.title" )
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+							"$horizontalGroup": "par l {space :0:0:x}"
+							"$verticalGroup": "par l {space :0:254:x}"
+						} ) {
+							name: "filter"
+						}, new FormLayoutConstraints( null ) {
+							"title": new FormMessage( null, "gui.filter.tab.title" )
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+							"$horizontalGroup": "par l {space :0:0:x}"
+							"$verticalGroup": "par l {space :0:254:x}"
+						} ) {
+							name: "servlet"
+						}, new FormLayoutConstraints( null ) {
+							"title": new FormMessage( null, "gui.servlet.tab.title" )
+						} )
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "tomcat"
+					} )
+					add( new FormContainer( "javax.swing.JTabbedPane", new FormLayoutManager( class javax.swing.JTabbedPane ) ) {
+						name: "tabSpringBoot"
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+							"$horizontalGroup": "par l {space :0:370:x}"
+							"$verticalGroup": "par l {space :0:254:x}"
+						} ) {
+							name: "controller"
+						}, new FormLayoutConstraints( null ) {
+							"title": new FormMessage( null, "gui.controller.tab.title" )
+						} )
+						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+							"$horizontalGroup": "par l {space :0:370:x}"
+							"$verticalGroup": "par l {space :0:254:x}"
+						} ) {
+							name: "interceptor"
+						}, new FormLayoutConstraints( null ) {
+							"title": new FormMessage( null, "gui.interceptor.tab.title" )
+						} )
+					}, new FormLayoutConstraints( class java.lang.String ) {
+						"value": "springboot"
+					} )
+				}, new FormLayoutConstraints( class java.lang.String ) {
+					"value": "right"
+				} )
+			} )
 		}, new FormLayoutConstraints( null ) {
-			"location": new java.awt.Point( 130, 25 )
-			"size": new java.awt.Dimension( 580, 470 )
+			"location": new java.awt.Point( 70, 15 )
+			"size": new java.awt.Dimension( 670, 475 )
 		} )
 	}
 }
