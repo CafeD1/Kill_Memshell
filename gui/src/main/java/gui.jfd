@@ -7,26 +7,20 @@ new FormModel {
 	contentType: "form/swing"
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-			"$horizontalGroup": "par l {seq l {comp panel1:::p::p, space :::p, comp detail:::p:386:p, space ::114:x}}"
-			"$verticalGroup": "par l {comp panel1:::::x, seq l {space :::p, comp detail:::p:295:p, space ::143:x}}"
+			"$horizontalGroup": "par l {seq l {space :::p, par t {comp scrollPane1::t:p:548:p, seq l {comp panel1:::p::p, space :::p, comp detail:::p:386:p}}, space ::153:x}}"
+			"$verticalGroup": "par l {seq l {par l:::p {seq {space :::p, comp detail:::p:295:p}, comp panel1:::::x}, space :::p, comp scrollPane1:::p:137:p, space ::15:x}}"
 		} ) {
 			name: "this"
 			"title": new FormMessage( null, "gui.this.title" )
 			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-				"$horizontalGroup": "par l {seq l {space :::p, par t:::p {comp scrollPane2::l::146:x, comp scrollPane1::l::146:x, comp GetJVMProcess::l::146:x, comp attach::t::146:x}, space :0:10:x}}"
-				"$verticalGroup": "par l {seq l {comp GetJVMProcess:::p:26:p, space :::p, comp attach:::p:26:p, space :::p, comp scrollPane2:::p:187:p, space :::p, comp scrollPane1::::181:x, space :::p}}"
+				"$horizontalGroup": "par l {seq l {space :::p, par t:::p {comp GetJVMProcess::l::146:x, comp attach::t::146:x, comp scrollPane2::l::146:x}, space :0:10:x}}"
+				"$verticalGroup": "par l {seq l {comp GetJVMProcess:::p:26:p, space :::p, comp attach:::p:26:p, space :::p, comp scrollPane2::::0:x, space :::p}}"
 			} ) {
 				name: "panel1"
 				add( new FormComponent( "javax.swing.JButton" ) {
 					name: "GetJVMProcess"
 					"text": new FormMessage( null, "gui.GetJVMProcess.text" )
 					addEvent( new FormEvent( "java.awt.event.ActionListener", "actionPerformed", "GetJVMProcess", true ) )
-				} )
-				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
-					name: "scrollPane1"
-					add( new FormComponent( "javax.swing.JTextArea" ) {
-						name: "statusTextArea"
-					} )
 				} )
 				add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
 					name: "scrollPane2"
@@ -59,7 +53,7 @@ new FormModel {
 						name: "tabTomcat"
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
 							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:254:x}"
+							"$verticalGroup": "par l {space :0:253:x}"
 						} ) {
 							name: "listener"
 						}, new FormLayoutConstraints( null ) {
@@ -67,7 +61,7 @@ new FormModel {
 						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
 							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:254:x}"
+							"$verticalGroup": "par l {space :0:253:x}"
 						} ) {
 							name: "filter"
 						}, new FormLayoutConstraints( null ) {
@@ -75,7 +69,7 @@ new FormModel {
 						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
 							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:254:x}"
+							"$verticalGroup": "par l {space :0:253:x}"
 						} ) {
 							name: "servlet"
 						}, new FormLayoutConstraints( null ) {
@@ -87,16 +81,16 @@ new FormModel {
 					add( new FormContainer( "javax.swing.JTabbedPane", new FormLayoutManager( class javax.swing.JTabbedPane ) ) {
 						name: "tabSpringBoot"
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-							"$horizontalGroup": "par l {space :0:370:x}"
-							"$verticalGroup": "par l {space :0:254:x}"
+							"$horizontalGroup": "par l {space :0:358:x}"
+							"$verticalGroup": "par l {space :0:253:x}"
 						} ) {
 							name: "controller"
 						}, new FormLayoutConstraints( null ) {
 							"title": new FormMessage( null, "gui.controller.tab.title" )
 						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-							"$horizontalGroup": "par l {space :0:370:x}"
-							"$verticalGroup": "par l {space :0:254:x}"
+							"$horizontalGroup": "par l {space :0:358:x}"
+							"$verticalGroup": "par l {space :0:253:x}"
 						} ) {
 							name: "interceptor"
 						}, new FormLayoutConstraints( null ) {
@@ -109,9 +103,15 @@ new FormModel {
 					"value": "right"
 				} )
 			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane1"
+				add( new FormComponent( "javax.swing.JTextArea" ) {
+					name: "statusTextArea"
+				} )
+			} )
 		}, new FormLayoutConstraints( null ) {
-			"location": new java.awt.Point( 70, 15 )
-			"size": new java.awt.Dimension( 670, 475 )
+			"location": new java.awt.Point( 25, 0 )
+			"size": new java.awt.Dimension( 715, 490 )
 		} )
 	}
 }

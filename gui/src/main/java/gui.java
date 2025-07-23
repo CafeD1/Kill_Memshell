@@ -20,6 +20,7 @@ import com.sun.tools.attach.AgentLoadException;
 import com.sun.tools.attach.AttachNotSupportedException;
 import com.sun.tools.attach.VirtualMachine;
 import org.cafedi.util.JvmProcessList;
+import org.cafedi.util.SocketServer;
 //import org.jdesktop.swingx.*;
 /*
  * Created by JFormDesigner on Thu Jul 17 17:43:59 CST 2025
@@ -101,6 +102,8 @@ public class gui extends JFrame {
     }
 
     private void attach(ActionEvent e) throws IOException, AttachNotSupportedException, AgentLoadException, AgentInitializationException {
+        //开始监听socket
+        new SocketServer(statusTextArea).start();
         //获取选中的行索引
         int selectedRow = jvmTable.getSelectedRow();
         if(selectedRow!=-1){
@@ -117,8 +120,9 @@ public class gui extends JFrame {
                 path = agentpath.toAbsolutePath().toString();
             }else{
                 statusTextArea.append("请检查agent文件是否存在");
+                return;
             }
-            vm.loadAgent(path);
+            vm.loadAgent(path,"agent");
             vm.detach();
 
         }else {
@@ -148,8 +152,6 @@ public class gui extends JFrame {
         ResourceBundle bundle = ResourceBundle.getBundle("config");
         panel1 = new JPanel();
         GetJVMProcess = new JButton();
-        scrollPane1 = new JScrollPane();
-        statusTextArea = new JTextArea();
         scrollPane2 = new JScrollPane();
         jvmTable = new JTable();
         attach = new JButton();
@@ -164,6 +166,8 @@ public class gui extends JFrame {
         tabSpringBoot = new JTabbedPane();
         controller = new JPanel();
         interceptor = new JPanel();
+        scrollPane1 = new JScrollPane();
+        statusTextArea = new JTextArea();
 
         //======== this ========
         setTitle(bundle.getString("gui.this.title"));
@@ -175,11 +179,6 @@ public class gui extends JFrame {
             //---- GetJVMProcess ----
             GetJVMProcess.setText(bundle.getString("gui.GetJVMProcess.text"));
             GetJVMProcess.addActionListener(e -> GetJVMProcess(e));
-
-            //======== scrollPane1 ========
-            {
-                scrollPane1.setViewportView(statusTextArea);
-            }
 
             //======== scrollPane2 ========
             {
@@ -214,10 +213,9 @@ attach(e);} catch (IOException ex) {
                     .addGroup(panel1Layout.createSequentialGroup()
                         .addContainerGap()
                         .addGroup(panel1Layout.createParallelGroup(GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(scrollPane2, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                            .addComponent(scrollPane1, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
                             .addComponent(GetJVMProcess, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
-                            .addComponent(attach, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
+                            .addComponent(attach, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                            .addComponent(scrollPane2, GroupLayout.Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE))
                         .addGap(0, 10, Short.MAX_VALUE))
             );
             panel1Layout.setVerticalGroup(
@@ -227,9 +225,7 @@ attach(e);} catch (IOException ex) {
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(attach, GroupLayout.PREFERRED_SIZE, 26, GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scrollPane2, GroupLayout.PREFERRED_SIZE, 187, GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(scrollPane1, GroupLayout.DEFAULT_SIZE, 181, Short.MAX_VALUE)
+                        .addComponent(scrollPane2, GroupLayout.DEFAULT_SIZE, 0, Short.MAX_VALUE)
                         .addContainerGap())
             );
         }
@@ -265,7 +261,7 @@ attach(e);} catch (IOException ex) {
                         );
                         listenerLayout.setVerticalGroup(
                             listenerLayout.createParallelGroup()
-                                .addGap(0, 254, Short.MAX_VALUE)
+                                .addGap(0, 253, Short.MAX_VALUE)
                         );
                     }
                     tabTomcat.addTab(bundle.getString("gui.listener.tab.title"), listener);
@@ -281,7 +277,7 @@ attach(e);} catch (IOException ex) {
                         );
                         filterLayout.setVerticalGroup(
                             filterLayout.createParallelGroup()
-                                .addGap(0, 254, Short.MAX_VALUE)
+                                .addGap(0, 253, Short.MAX_VALUE)
                         );
                     }
                     tabTomcat.addTab(bundle.getString("gui.filter.tab.title"), filter);
@@ -297,7 +293,7 @@ attach(e);} catch (IOException ex) {
                         );
                         servletLayout.setVerticalGroup(
                             servletLayout.createParallelGroup()
-                                .addGap(0, 254, Short.MAX_VALUE)
+                                .addGap(0, 253, Short.MAX_VALUE)
                         );
                     }
                     tabTomcat.addTab(bundle.getString("gui.servlet.tab.title"), servlet);
@@ -314,11 +310,11 @@ attach(e);} catch (IOException ex) {
                         controller.setLayout(controllerLayout);
                         controllerLayout.setHorizontalGroup(
                             controllerLayout.createParallelGroup()
-                                .addGap(0, 370, Short.MAX_VALUE)
+                                .addGap(0, 358, Short.MAX_VALUE)
                         );
                         controllerLayout.setVerticalGroup(
                             controllerLayout.createParallelGroup()
-                                .addGap(0, 254, Short.MAX_VALUE)
+                                .addGap(0, 253, Short.MAX_VALUE)
                         );
                     }
                     tabSpringBoot.addTab(bundle.getString("gui.controller.tab.title"), controller);
@@ -330,11 +326,11 @@ attach(e);} catch (IOException ex) {
                         interceptor.setLayout(interceptorLayout);
                         interceptorLayout.setHorizontalGroup(
                             interceptorLayout.createParallelGroup()
-                                .addGap(0, 370, Short.MAX_VALUE)
+                                .addGap(0, 358, Short.MAX_VALUE)
                         );
                         interceptorLayout.setVerticalGroup(
                             interceptorLayout.createParallelGroup()
-                                .addGap(0, 254, Short.MAX_VALUE)
+                                .addGap(0, 253, Short.MAX_VALUE)
                         );
                     }
                     tabSpringBoot.addTab(bundle.getString("gui.interceptor.tab.title"), interceptor);
@@ -344,23 +340,36 @@ attach(e);} catch (IOException ex) {
             detail.setRightComponent(panelCards);
         }
 
+        //======== scrollPane1 ========
+        {
+            scrollPane1.setViewportView(statusTextArea);
+        }
+
         GroupLayout contentPaneLayout = new GroupLayout(contentPane);
         contentPane.setLayout(contentPaneLayout);
         contentPaneLayout.setHorizontalGroup(
             contentPaneLayout.createParallelGroup()
                 .addGroup(contentPaneLayout.createSequentialGroup()
-                    .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 386, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(114, Short.MAX_VALUE))
+                    .addContainerGap()
+                    .addGroup(contentPaneLayout.createParallelGroup(GroupLayout.Alignment.TRAILING)
+                        .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 548, GroupLayout.PREFERRED_SIZE)
+                        .addGroup(GroupLayout.Alignment.LEADING, contentPaneLayout.createSequentialGroup()
+                            .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(detail, GroupLayout.PREFERRED_SIZE, 386, GroupLayout.PREFERRED_SIZE)))
+                    .addContainerGap(153, Short.MAX_VALUE))
         );
         contentPaneLayout.setVerticalGroup(
             contentPaneLayout.createParallelGroup()
-                .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(contentPaneLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(143, Short.MAX_VALUE))
+                    .addGroup(contentPaneLayout.createParallelGroup(GroupLayout.Alignment.LEADING, false)
+                        .addGroup(contentPaneLayout.createSequentialGroup()
+                            .addContainerGap()
+                            .addComponent(detail, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE))
+                        .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 137, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(15, Short.MAX_VALUE))
         );
         pack();
         setLocationRelativeTo(getOwner());
@@ -370,8 +379,6 @@ attach(e);} catch (IOException ex) {
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel panel1;
     private JButton GetJVMProcess;
-    private JScrollPane scrollPane1;
-    private JTextArea statusTextArea;
     private JScrollPane scrollPane2;
     private JTable jvmTable;
     private JButton attach;
@@ -386,5 +393,7 @@ attach(e);} catch (IOException ex) {
     private JTabbedPane tabSpringBoot;
     private JPanel controller;
     private JPanel interceptor;
+    private JScrollPane scrollPane1;
+    private JTextArea statusTextArea;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }
