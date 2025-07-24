@@ -1,10 +1,18 @@
 package org.cafedi;
 
+import org.cafedi.asm.BytecodeDumper;
+import org.cafedi.asm.MemShellASMAnalyzer;
+
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.instrument.Instrumentation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 public class MemShellScannerAgent {
     public static void agentmain(String args, Instrumentation inst) throws IOException {
@@ -13,15 +21,20 @@ public class MemShellScannerAgent {
             //枚举所有已加载类
             writer.println("[*] Scan Start");
             Class[] classes = inst.getAllLoadedClasses();
-            String[] keywords = {"shell", "proxy", "evil", "inject", "mem"};
+            //黑名单
+            List<String> black_keywords = Arrays.asList("shell", "proxy", "evil", "inject", "mem");
+            //白名单
+            List<String> white_keywords = Arrays.asList("org.springframework", "jakarta.servlet", "java.", "javax.");
             for (Class<?> clazz : classes) {
                 String className = clazz.getName().toLowerCase();
+                //白名单过滤
+                if (white_keywords.stream().anyMatch(className::startsWith)) continue;
                 Boolean suspicious = false;
                 // 1. 类名关键字检测
-                for (String keyword : keywords) {
+                for (String keyword : black_keywords) {
                     if (className.contains(keyword)) {
                         suspicious = true;
-                        writer.println("Suspicious keyword: " + keyword);
+                        //writer.println("Suspicious ClassName: " + className);
                         break;
                     }
                 }
@@ -29,8 +42,7 @@ public class MemShellScannerAgent {
                 ClassLoader cl = clazz.getClassLoader();
                 if (cl != null && cl.getClass().getName().equals("AppClassLoader")) {
                     suspicious = true;
-                    writer.println("[!] Loaded by suspicious ClassLoader: " + cl.getClass().getName() + " for class: " + clazz.getName());
-                    break;
+                    //writer.println("[!] Loaded by suspicious ClassLoader: " + cl.getClass().getName() + " for class: " + clazz.getName());
                 }
                 // 3. 接口/父类判断
                 // 4. 可疑方法判断
@@ -38,11 +50,15 @@ public class MemShellScannerAgent {
                     String name = m.getName();
                     if (name.equals("dofilter")) {
                         suspicious = true;
-                        writer.println("[!] Loaded by suspicious Method: " + clazz.getName() + "#" + name);
+                        //writer.println("[!] Loaded by suspicious Method: " + clazz.getName() + "#" + name);
                     }
                 }
                 if (suspicious) {
-                    writer.println("[!] Loaded by suspicious Method: " + clazz.getName());
+                    writer.println("[!] Loaded by suspicious Class: " + clazz.getName());
+                    //获取字节码
+                    Map<String,byte[]> classbyteMap = BytecodeDumper.dumpAllLoadClass(inst);
+                    //使用ASM详细分析可疑代码
+                    MemShellASMAnalyzer.analyze(classbyteMap);
                 }
             }
             writer.println("[*]Scan Complete");
