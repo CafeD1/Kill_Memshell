@@ -2,6 +2,7 @@ package org.cafedi;
 
 import org.cafedi.asm.BytecodeDumper;
 import org.cafedi.asm.MemShellASMAnalyzer;
+import org.cafedi.asm.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +21,7 @@ public class MemShellScannerAgent {
         //创建一个socket连接，监听8899端口
         try (Socket socket = new Socket("127.0.0.1", 8899);PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)){
             //枚举所有已加载类
-            writer.println("[*] Scan Start");
+            writer.println("[******]Scan Start[*******]");
             Class[] classes = inst.getAllLoadedClasses();
             //黑名单
             List<String> black_keywords = Arrays.asList("shell", "proxy", "evil", "inject", "mem");
@@ -54,14 +56,20 @@ public class MemShellScannerAgent {
                     }
                 }
                 if (suspicious) {
-                    writer.println("[!] Loaded by suspicious Class: " + clazz.getName());
+                    writer.println("[!]Loaded by suspicious Class: " + clazz.getName());
                     //获取字节码
-                    Map<String,byte[]> classbyteMap = BytecodeDumper.dumpAllLoadClass(inst);
+                    writer.println("[*]Start dump classbytes");
+                    Map<String,byte[]> classbyteMap = BytecodeDumper.dumpAllLoadClass(inst,clazz.getName(),writer);
+                    //写入.class文件，用于反编译或分析
+                    //todo
+                    writer.println("[*]End dump classbytes");
                     //使用ASM详细分析可疑代码
-                    MemShellASMAnalyzer.analyze(classbyteMap);
+                    writer.println("[*]Start asm analyze"+" Map Size: " + classbyteMap.size());
+                    //Test.test(classbyteMap,writer);
+                    MemShellASMAnalyzer.analyze(classbyteMap,writer);
                 }
             }
-            writer.println("[*]Scan Complete");
+            writer.println("[******]Scan Complete[******]");
             // 4. 可疑方法判断
         }catch (Throwable e) {
             e.printStackTrace();

@@ -114,7 +114,7 @@ public class gui extends JFrame {
             //日志显示
             statusTextArea.append("开始Attach进程"+param+"\n");
             VirtualMachine vm = VirtualMachine.attach(param);
-            Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
+            Path agentpath = Paths.get("agent/target/MemShellScannerAgent-1.0-SNAPSHOT.jar");
             String path = "";
             if (Files.exists(agentpath)){
                 path = agentpath.toAbsolutePath().toString();
