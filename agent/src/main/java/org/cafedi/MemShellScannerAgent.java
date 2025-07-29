@@ -60,13 +60,14 @@ public class MemShellScannerAgent {
                     //获取字节码
                     writer.println("[*]Start dump classbytes");
                     Map<String,byte[]> classbyteMap = BytecodeDumper.dumpAllLoadClass(inst,clazz.getName(),writer);
-                    //写入.class文件，用于反编译或分析
-                    //todo
                     writer.println("[*]End dump classbytes");
                     //使用ASM详细分析可疑代码
-                    writer.println("[*]Start asm analyze"+" Map Size: " + classbyteMap.size());
-                    //Test.test(classbyteMap,writer);
-                    MemShellASMAnalyzer.analyze(classbyteMap,writer);
+                    if (classbyteMap != null || classbyteMap.size() > 0) {
+                        writer.println("[*]Start asm analyze");
+                        MemShellASMAnalyzer.analyze(classbyteMap,writer);
+                        writer.println("[*]End asm analyze");
+                    }
+
                 }
             }
             writer.println("[******]Scan Complete[******]");

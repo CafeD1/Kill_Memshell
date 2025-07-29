@@ -12,6 +12,7 @@
     </modules>
     <build>
         <plugins>
+            <!-- 你的现有 jar 插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -27,9 +28,44 @@
                     </archive>
                 </configuration>
             </plugin>
+
+            <!-- 新增：Shade 插件，把 asm 等依赖打入同一个 JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <!-- （可选）重定位 asm 包，避免和目标应用的 asm 冲突 -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>org.cafedi.agent.shaded.asm</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <!-- 合并 manifest，让 Shade 输出的 JAR 也带上 Agent 属性 -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Agent-Class>org.cafedi.MemShellScannerAgent</Agent-Class>
+                                        <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                                        <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                                        <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
     <dependencies>
+        <!-- 你的 asm 依赖，保持不变 -->
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>

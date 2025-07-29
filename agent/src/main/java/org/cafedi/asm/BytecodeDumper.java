@@ -7,6 +7,8 @@ package org.cafedi.asm;
 在 transform 方法中拦截类的原始字节码（classfileBuffer）；
 
 保存到 classByteMap 中，供后续分析（如使用 ASM 判断是否是内存马）
+
+保存到本地，用于反编译或分析
  */
 
 import java.io.File;
@@ -80,7 +82,7 @@ public class BytecodeDumper {
         }
         return classByteMap;
     }
-
+    //写入本地文件，用于反编译或分析
     private static void dumpClassToFile(String classname, byte[] classBytes, PrintWriter writer) {
         try {
             String baseDir = "/dumpClassFile";
