@@ -7,18 +7,36 @@ import org.objectweb.asm.Opcodes;
 
 
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.*;
 import java.util.regex.Pattern;
 
 public class MemShellASMAnalyzer {
     // 定义一组可配置的检测规则：ownerPattern, methodPattern, label
     private static final List<Rule> RULES = Arrays.asList(
-            new Rule(".*ServletContext.*", "addFilter", "[Filter Shell]"),
-            new Rule(".*ServletContext.*", "addServlet", "[Servlet Shell]"),
-            new Rule(".*ServletContext.*", "addListener", "[Listener Shell]"),
+            //filter
+            new Rule(".*Context.*", "addFilterMapBefore", "[Filter Shell]"),
+            new Rule(".*javax/servlet/filterchain.*", "dofilter", "[Filter Shell]"),
+            //servlet
+            new Rule(".*Context.*", "addChild", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/HttpServletRequest.*", "service", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/HttpServletResponse.*", "service", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doGet", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doPost", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doDelete", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doHead", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doOptions", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "doPut", "[Servlet Shell]"),
+            new Rule(".*javax/servlet/http/HttpServletRequest.*", "Trace", "[Servlet Shell]"),
+            //listener
+            new Rule(".*Context.*", "addApplicationEventListener", "[Listener Shell]"),
+            new Rule(".*javax/servlet/ServletRequestEvent.*", "requestInitialized", "[Listener Shell]"),
+            //spring controller
             new Rule(".*springframework.*", "register.*", "[Spring Controller Shell]"),
+            //proxy
             new Rule("java/lang/reflect/Proxy", "invoke", "[Proxy Shell]"),
             new Rule(".*ClassLoader.*", "defineClass.*", "[Dynamic Load Suspect]"),
+            // dynamic load
             new Rule("sun/misc/Unsafe", "defineClass.*", "[Unsafe Dynamic Load]")
             // … 如需更多规则可继续在此添加
     );
@@ -47,12 +65,14 @@ public class MemShellASMAnalyzer {
                        if (interfaces != null && interfaces.length > 0) {
                            //添加接口到集合列表
                            meta.interfaces.addAll(Arrays.asList(interfaces));
+                           writer.println("interfaces:"+meta.interfaces+"   classname:"+meta.className);
                        }
                    }
                }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
                // 再完整遍历，含方法调用和常量池检测
                cr.accept(new ClassVisitor(Opcodes.ASM9) {
                    private boolean isFilterLike = meta.interfaces.contains("javax/servlet/Filter")  || meta.className.toLowerCase().contains("filter");
+                   private boolean isServletLike = meta.interfaces.contains("javax/servlet/Servlet")  || meta.className.toLowerCase().contains("servlet");
                    //可补充servlet等内存马特征
                    @Override
                    public  MethodVisitor visitMethod(int access, String mName, String desc, String signature, String[] exceptions){
@@ -60,16 +80,12 @@ public class MemShellASMAnalyzer {
                            @Override
                            public void visitMethodInsn(int opcode, String owner, String methodName, String desc, boolean itf) {
                                String o = owner.toLowerCase(), m = methodName.toLowerCase();
+                               //writer.println("owner:"+o+",methodname:"+m);
                                RULES.forEach(r -> {
                                    if (r.matches(o, m)) {
                                        writer.printf("[%s] %s → %s#%s()%n", r.label, meta.className, owner, methodName);
                                    }
                                });
-                               // 针对 Filter shell 的额外校验
-                               if (isFilterLike && o.contains("servletcontext") && m.contains("addfilter")) {
-                                   writer.printf("[!! 强化 FilterShell 检测 !!] %s%n", meta.className);
-                               }
-                               //可补充针对Servlet shell的校验等。
                            }
                            @Override
                            public void visitLdcInsn(Object cst) {
