@@ -31,6 +31,7 @@ public class MemShellASMAnalyzer {
             //listener
             new Rule(".*Context.*", "addApplicationEventListener", "[Listener Shell]"),
             new Rule(".*javax/servlet/ServletRequestEvent.*", "requestInitialized", "[Listener Shell]"),
+            new Rule(".*javax/servlet/ServletRequestEvent.*", "requestDestroyed", "[Listener Shell]"),
             //spring controller
             new Rule(".*springframework.*", "register.*", "[Spring Controller Shell]"),
             //proxy
@@ -56,16 +57,14 @@ public class MemShellASMAnalyzer {
                // 先在外层解析接口和 superName，用于后续规则判断
                ClassMetadata meta = new ClassMetadata();
                cr.accept(new ClassVisitor(Opcodes.ASM9) {
-                   //初始化接口集合
-//                   Set<String> interfaces = new HashSet<>();
-//                   String superName;
+//                 String superName;
                    @Override
                    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
                        meta.className = name;
                        if (interfaces != null && interfaces.length > 0) {
                            //添加接口到集合列表
                            meta.interfaces.addAll(Arrays.asList(interfaces));
-                           writer.println("interfaces:"+meta.interfaces+"   classname:"+meta.className);
+                           //writer.println("interfaces:"+meta.interfaces+"   classname:"+meta.className);
                        }
                    }
                }, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
@@ -80,7 +79,6 @@ public class MemShellASMAnalyzer {
                            @Override
                            public void visitMethodInsn(int opcode, String owner, String methodName, String desc, boolean itf) {
                                String o = owner.toLowerCase(), m = methodName.toLowerCase();
-                               //writer.println("owner:"+o+",methodname:"+m);
                                RULES.forEach(r -> {
                                    if (r.matches(o, m)) {
                                        writer.printf("[%s] %s → %s#%s()%n", r.label, meta.className, owner, methodName);

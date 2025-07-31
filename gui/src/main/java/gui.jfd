@@ -7,8 +7,8 @@ new FormModel {
 	contentType: "form/swing"
 	root: new FormRoot {
 		add( new FormWindow( "javax.swing.JFrame", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-			"$horizontalGroup": "par l {seq l {space :::p, par t {comp scrollPane1::t:p:548:p, seq l {comp panel1:::p::p, space :::p, comp detail:::p:386:p}}, space ::153:x}}"
-			"$verticalGroup": "par l {seq l {par l:::p {seq {space :::p, comp detail:::p:295:p}, comp panel1:::::x}, space :::p, comp scrollPane1:::p:137:p, space ::15:x}}"
+			"$horizontalGroup": "par l {seq t {space :::x, comp panel1:::p::p, space :::p, comp detail:::p:386:p, space :p:31:p, comp panel2:::p::p, space :p:15:p}, seq {space :p:12:p, comp scrollPane1:::p:695:p, space :::p}}"
+			"$verticalGroup": "par l {seq l {par l {comp panel1:::::x, seq l {space :::p, par l {comp panel2:::::x, seq {comp detail:::p:295:p, space :0:0:x}}}}, space :::p, comp scrollPane1:::p:137:p, space :p:15:p}}"
 		} ) {
 			name: "this"
 			"title": new FormMessage( null, "gui.this.title" )
@@ -60,10 +60,16 @@ new FormModel {
 							"title": new FormMessage( null, "gui.listener.tab.title" )
 						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:253:x}"
+							"$horizontalGroup": "par l {comp scrollPane4::l::358:x}"
+							"$verticalGroup": "par l {comp scrollPane4::l::253:x}"
 						} ) {
 							name: "filter"
+							add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+								name: "scrollPane4"
+								add( new FormComponent( "javax.swing.JTextArea" ) {
+									name: "filterTextArea"
+								} )
+							} )
 						}, new FormLayoutConstraints( null ) {
 							"title": new FormMessage( null, "gui.filter.tab.title" )
 						} )
@@ -107,6 +113,16 @@ new FormModel {
 				name: "scrollPane1"
 				add( new FormComponent( "javax.swing.JTextArea" ) {
 					name: "statusTextArea"
+				} )
+			} )
+			add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
+				"$horizontalGroup": "par l {seq t {space ::7:x, comp memClean:::p::p, space :::p}}"
+				"$verticalGroup": "par l {seq l {comp memClean:::p::p, space :0:0:x}}"
+			} ) {
+				name: "panel2"
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "memClean"
+					"text": "清除内存马"
 				} )
 			} )
 		}, new FormLayoutConstraints( null ) {
