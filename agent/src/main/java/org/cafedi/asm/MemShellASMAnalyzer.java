@@ -78,10 +78,11 @@ public class MemShellASMAnalyzer {
                        return new MethodVisitor(Opcodes.ASM9) {
                            @Override
                            public void visitMethodInsn(int opcode, String owner, String methodName, String desc, boolean itf) {
-                               String o = owner.toLowerCase(), m = methodName.toLowerCase();
+                               String o = owner, m = methodName;
                                RULES.forEach(r -> {
                                    if (r.matches(o, m)) {
-                                       writer.printf("[%s] %s → %s#%s()%n", r.label, meta.className, owner, methodName);
+                                       //writer.printf("[%s] %s → %s#%s()%n", r.label, meta.className, owner, methodName);
+                                       writer.printf("[%s] %s → %s()%n", r.label, meta.className.replace("/","."),methodName);
                                    }
                                });
                            }
@@ -91,6 +92,9 @@ public class MemShellASMAnalyzer {
                                    String s = (String) cst;
                                    if (JSP_TAG_PATTERN.matcher(s).find() || SHELL_KEYWORD_PATTERN.matcher(s).find()) {
                                        writer.printf("[常量检测] %s 含可疑脚本标记：%s%n", meta.className, s);
+                                       if (meta.interfaces.contains("javax/servlet/Filter")) {
+                                           writer.printf("[常量检测][Filter Shell] %s 含可疑脚本标记：%s%n", meta.className, s);
+                                       }
                                    }
                                }
                            }

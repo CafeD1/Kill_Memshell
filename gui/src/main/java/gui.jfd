@@ -52,10 +52,16 @@ new FormModel {
 					add( new FormContainer( "javax.swing.JTabbedPane", new FormLayoutManager( class javax.swing.JTabbedPane ) ) {
 						name: "tabTomcat"
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:253:x}"
+							"$horizontalGroup": "par l {comp scrollPane6::l::358:x}"
+							"$verticalGroup": "par l {seq l {comp scrollPane6::::247:x, space :::p}}"
 						} ) {
 							name: "listener"
+							add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+								name: "scrollPane6"
+								add( new FormComponent( "javax.swing.JTextArea" ) {
+									name: "listenerTextArea"
+								} )
+							} )
 						}, new FormLayoutConstraints( null ) {
 							"title": new FormMessage( null, "gui.listener.tab.title" )
 						} )
@@ -74,10 +80,16 @@ new FormModel {
 							"title": new FormMessage( null, "gui.filter.tab.title" )
 						} )
 						add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class org.jdesktop.layout.GroupLayout ) {
-							"$horizontalGroup": "par l {space :0:0:x}"
-							"$verticalGroup": "par l {space :0:253:x}"
+							"$horizontalGroup": "par l {comp scrollPane5::t::358:x}"
+							"$verticalGroup": "par l {comp scrollPane5::t::253:x}"
 						} ) {
 							name: "servlet"
+							add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+								name: "scrollPane5"
+								add( new FormComponent( "javax.swing.JTextArea" ) {
+									name: "servletTextArea"
+								} )
+							} )
 						}, new FormLayoutConstraints( null ) {
 							"title": new FormMessage( null, "gui.servlet.tab.title" )
 						} )

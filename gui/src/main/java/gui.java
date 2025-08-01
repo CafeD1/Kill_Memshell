@@ -116,9 +116,15 @@ public class gui extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 // 3. 先把原始消息追加到全局日志面板
                 statusTextArea.append(msg+"\n");
+                // 4. 如果消息里包含特定标记，就再把它追加到对应子面板
                 if (msg.contains("[Filter Shell]")) {
-                    // 4. 如果消息里包含特定标记，就再把它追加到“Filter”子面板
-                    filterTextArea.append(msg+"\n");
+                    filterTextArea.append(msg + "\n");
+                }
+                if (msg.contains("[Servlet Shell]")) {
+                    servletTextArea.append(msg+"\n");
+                }
+                if (msg.contains("[Listener Shell]")) {
+                    listenerTextArea.append(msg+"\n");
                 }
             });
         };
@@ -182,10 +188,14 @@ public class gui extends JFrame {
         panelCards = new JPanel();
         tabTomcat = new JTabbedPane();
         listener = new JPanel();
+        scrollPane6 = new JScrollPane();
+        listenerTextArea = new JTextArea();
         filter = new JPanel();
         scrollPane4 = new JScrollPane();
         filterTextArea = new JTextArea();
         servlet = new JPanel();
+        scrollPane5 = new JScrollPane();
+        servletTextArea = new JTextArea();
         tabSpringBoot = new JTabbedPane();
         controller = new JPanel();
         interceptor = new JPanel();
@@ -278,15 +288,22 @@ attach(e);} catch (IOException ex) {
                     //======== listener ========
                     {
 
+                        //======== scrollPane6 ========
+                        {
+                            scrollPane6.setViewportView(listenerTextArea);
+                        }
+
                         GroupLayout listenerLayout = new GroupLayout(listener);
                         listener.setLayout(listenerLayout);
                         listenerLayout.setHorizontalGroup(
                             listenerLayout.createParallelGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(scrollPane6, GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
                         );
                         listenerLayout.setVerticalGroup(
                             listenerLayout.createParallelGroup()
-                                .addGap(0, 253, Short.MAX_VALUE)
+                                .addGroup(listenerLayout.createSequentialGroup()
+                                    .addComponent(scrollPane6, GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                                    .addContainerGap())
                         );
                     }
                     tabTomcat.addTab(bundle.getString("gui.listener.tab.title"), listener);
@@ -315,15 +332,20 @@ attach(e);} catch (IOException ex) {
                     //======== servlet ========
                     {
 
+                        //======== scrollPane5 ========
+                        {
+                            scrollPane5.setViewportView(servletTextArea);
+                        }
+
                         GroupLayout servletLayout = new GroupLayout(servlet);
                         servlet.setLayout(servletLayout);
                         servletLayout.setHorizontalGroup(
                             servletLayout.createParallelGroup()
-                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(scrollPane5, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 358, Short.MAX_VALUE)
                         );
                         servletLayout.setVerticalGroup(
                             servletLayout.createParallelGroup()
-                                .addGap(0, 253, Short.MAX_VALUE)
+                                .addComponent(scrollPane5, GroupLayout.Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 253, Short.MAX_VALUE)
                         );
                     }
                     tabTomcat.addTab(bundle.getString("gui.servlet.tab.title"), servlet);
@@ -448,10 +470,14 @@ attach(e);} catch (IOException ex) {
     private JPanel panelCards;
     private JTabbedPane tabTomcat;
     private JPanel listener;
+    private JScrollPane scrollPane6;
+    private JTextArea listenerTextArea;
     private JPanel filter;
     private JScrollPane scrollPane4;
     private JTextArea filterTextArea;
     private JPanel servlet;
+    private JScrollPane scrollPane5;
+    private JTextArea servletTextArea;
     private JTabbedPane tabSpringBoot;
     private JPanel controller;
     private JPanel interceptor;
