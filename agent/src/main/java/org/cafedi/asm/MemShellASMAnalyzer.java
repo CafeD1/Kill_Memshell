@@ -92,8 +92,14 @@ public class MemShellASMAnalyzer {
                                    String s = (String) cst;
                                    if (JSP_TAG_PATTERN.matcher(s).find() || SHELL_KEYWORD_PATTERN.matcher(s).find()) {
                                        writer.printf("[常量检测] %s 含可疑脚本标记：%s%n", meta.className, s);
-                                       if (meta.interfaces.contains("javax/servlet/Filter")) {
+                                       if (meta.interfaces.contains("javax/servlet/Filter") || s.toLowerCase().contains("filter")) {
                                            writer.printf("[常量检测][Filter Shell] %s 含可疑脚本标记：%s%n", meta.className, s);
+                                       }
+                                       if (meta.interfaces.contains("javax/servlet/http/HttpServlet") || s.toLowerCase().contains("servlet")) {
+                                           writer.printf("[常量检测][Servlet Shell] %s 含可疑脚本标记：%s%n", meta.className, s);
+                                       }
+                                       if (meta.interfaces.contains("javax/servlet/ServletRequestListener") || s.toLowerCase().contains("listener")) {
+                                           writer.printf("[常量检测][Listener Shell] %s 含可疑脚本标记：%s%n", meta.className, s);
                                        }
                                    }
                                }
