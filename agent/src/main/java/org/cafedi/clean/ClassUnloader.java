@@ -21,17 +21,18 @@ public class ClassUnloader {
      * 将指定类替换成一个空实现。
      * @param targetClass 被清除的类
      */
-    public void unloaderClass(Class<?> targetClass){
+    public void unloaderClass(String targetClass){
         try {
+            Class target = Class.forName(targetClass);
             //构造一个空实现
-            byte[] emptyBytecode = generateEmptyClass(targetClass);
+            byte[] emptyBytecode = generateEmptyClass(target);
             //构造一个“类定义”对象，用于告诉 JVM “要把哪个类替换成哪段新的字节码
-            ClassDefinition def = new ClassDefinition(targetClass, emptyBytecode);
+            ClassDefinition def = new ClassDefinition(target, emptyBytecode);
             //将 JVM 中已加载的目标类热替换为新的字节码定义
             inst.redefineClasses(def);
-            writer.println("[+] Unloaded class: " + targetClass.getName());
+            writer.println("[+] Unloaded class: " + target.getName());
         }catch (Exception e){
-            writer.println("[!] Failed to unload class: " + targetClass.getName());
+            writer.println("[!] Failed to unload class: " + targetClass);
             e.printStackTrace();
         }
     }

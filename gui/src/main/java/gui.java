@@ -2,6 +2,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,6 +38,7 @@ import static java.util.List.*;
  */
 public class gui extends JFrame {
     public gui() {
+        setTitle("Kill That Memshell By CafedDi");
         initComponents();
         //设置JList标签
         FrameList.setListData(new String[]{"Tomcat", "SpringBoot"});
@@ -173,6 +176,37 @@ public class gui extends JFrame {
             }
        }
     }
+    //读取用户输入的类名并清除内存马
+    private void memClean(ActionEvent e) {
+        try {
+            String targetClassName = cleanClassName.getText().trim();
+            if(targetClassName.isEmpty()){
+                JOptionPane.showMessageDialog(this, "请输入要清除的内存马类名或文件名");
+                return;
+            }
+            cleanMemShell(targetClassName);
+        }
+        catch (Exception ex) {
+            statusTextArea.append(ex.getMessage());
+        }
+    }
+    private void cleanMemShell(String target) {
+        if (!target.startsWith("[")) {
+            JOptionPane.showMessageDialog(this,"请按照格式 [filter/servlet/...]classname 输入要清除的内存马类名");
+            return;
+        }
+        //statusTextArea.append("开始清除："+target+"\n");
+        new Thread(()->{
+            try (Socket socket = new Socket("127.0.0.1", 9900); PrintWriter out = new PrintWriter(socket.getOutputStream(), true)){
+                out.println("[clean]"+target);
+            }
+            catch (Exception ex) {
+                SwingUtilities.invokeLater(() ->
+                        statusTextArea.append("[!] 发送清除命令失败: " + ex.getMessage() + "\n")
+                );
+            }
+        }).start();
+    }
 
     private void initComponents() {
         // JFormDesigner - Component initialization - DO NOT MODIFY  //GEN-BEGIN:initComponents  @formatter:off
@@ -203,6 +237,7 @@ public class gui extends JFrame {
         statusTextArea = new JTextArea();
         panel2 = new JPanel();
         memClean = new JButton();
+        cleanClassName = new JTextField();
 
         //======== this ========
         setTitle(bundle.getString("gui.this.title"));
@@ -402,20 +437,25 @@ attach(e);} catch (IOException ex) {
 
             //---- memClean ----
             memClean.setText("\u6e05\u9664\u5185\u5b58\u9a6c");
+            memClean.addActionListener(e -> memClean(e));
 
             GroupLayout panel2Layout = new GroupLayout(panel2);
             panel2.setLayout(panel2Layout);
             panel2Layout.setHorizontalGroup(
                 panel2Layout.createParallelGroup()
                     .addGroup(GroupLayout.Alignment.TRAILING, panel2Layout.createSequentialGroup()
-                        .addContainerGap(7, Short.MAX_VALUE)
-                        .addComponent(memClean)
+                        .addContainerGap()
+                        .addGroup(panel2Layout.createParallelGroup()
+                            .addComponent(memClean, GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE)
+                            .addComponent(cleanClassName, GroupLayout.DEFAULT_SIZE, 158, Short.MAX_VALUE))
                         .addContainerGap())
             );
             panel2Layout.setVerticalGroup(
                 panel2Layout.createParallelGroup()
                     .addGroup(panel2Layout.createSequentialGroup()
                         .addComponent(memClean)
+                        .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cleanClassName, GroupLayout.PREFERRED_SIZE, 42, GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
             );
         }
@@ -424,31 +464,28 @@ attach(e);} catch (IOException ex) {
         contentPane.setLayout(contentPaneLayout);
         contentPaneLayout.setHorizontalGroup(
             contentPaneLayout.createParallelGroup()
-                .addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
-                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
-                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 386, GroupLayout.PREFERRED_SIZE)
-                    .addGap(31, 31, 31)
-                    .addComponent(panel2, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                    .addGap(15, 15, 15))
                 .addGroup(contentPaneLayout.createSequentialGroup()
                     .addGap(12, 12, 12)
-                    .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 695, GroupLayout.PREFERRED_SIZE)
+                    .addGroup(contentPaneLayout.createParallelGroup()
+                        .addComponent(scrollPane1, GroupLayout.DEFAULT_SIZE, 730, Short.MAX_VALUE)
+                        .addGroup(contentPaneLayout.createSequentialGroup()
+                            .addComponent(panel1, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(detail, GroupLayout.PREFERRED_SIZE, 386, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(panel2, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addContainerGap())
         );
         contentPaneLayout.setVerticalGroup(
             contentPaneLayout.createParallelGroup()
                 .addGroup(contentPaneLayout.createSequentialGroup()
+                    .addContainerGap()
                     .addGroup(contentPaneLayout.createParallelGroup()
                         .addComponent(panel1, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addGroup(contentPaneLayout.createSequentialGroup()
-                            .addContainerGap()
-                            .addGroup(contentPaneLayout.createParallelGroup()
-                                .addComponent(panel2, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addGroup(contentPaneLayout.createSequentialGroup()
-                                    .addComponent(detail, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
-                                    .addGap(0, 0, Short.MAX_VALUE)))))
+                            .addComponent(detail, GroupLayout.PREFERRED_SIZE, 295, GroupLayout.PREFERRED_SIZE)
+                            .addGap(0, 0, Short.MAX_VALUE))
+                        .addComponent(panel2, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
                     .addComponent(scrollPane1, GroupLayout.PREFERRED_SIZE, 137, GroupLayout.PREFERRED_SIZE)
                     .addGap(15, 15, 15))
@@ -485,5 +522,6 @@ attach(e);} catch (IOException ex) {
     private JTextArea statusTextArea;
     private JPanel panel2;
     private JButton memClean;
+    private JTextField cleanClassName;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

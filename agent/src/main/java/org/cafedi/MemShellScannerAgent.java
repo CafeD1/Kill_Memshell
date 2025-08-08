@@ -3,13 +3,13 @@ package org.cafedi;
 import org.cafedi.asm.BytecodeDumper;
 import org.cafedi.asm.MemShellASMAnalyzer;
 import org.cafedi.asm.Test;
+import org.cafedi.clean.CleanUp;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,9 +17,15 @@ import java.util.List;
 import java.util.Map;
 
 public class MemShellScannerAgent {
+    private static Socket  eightNine_socket;
+    private static PrintWriter writer;
     public static void agentmain(String args, Instrumentation inst) throws IOException {
         //创建一个socket连接，监听8899端口
-        try (Socket socket = new Socket("127.0.0.1", 8899);PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)){
+        eightNine_socket = new Socket("127.0.0.1", 8899);
+        writer = new PrintWriter(eightNine_socket.getOutputStream(), true);
+        //启动命令监听线程
+        startCommandListener(inst);
+        try {
             //枚举所有已加载类
             writer.println("[******]Scan Start[*******]");
             Class[] classes = inst.getAllLoadedClasses();
@@ -77,7 +83,28 @@ public class MemShellScannerAgent {
         }
     }
     public static void premain(String agentArgs, Instrumentation inst) {}
+    private static void startCommandListener(Instrumentation inst) {
+        new Thread(()->{
+            try (ServerSocket cmdServer = new ServerSocket(9900)){
+                writer.println("[*]Start command listener 9900 Port");
+                while (true){
+                    Socket socket = cmdServer.accept();
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        if (line.contains("[clean]")) {
+                            String target = line.substring(7, line.length());
+                            writer.println("[*]Agent receive clean target :" + target.replaceAll("\\[[^\\]]*\\]",""));
+                            CleanUp.clean(target,inst,writer);
+                        }
+                    }
 
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }, "Agent-Command-Listener").start();
+    }
     public static void main(String[] args) {
 
     }

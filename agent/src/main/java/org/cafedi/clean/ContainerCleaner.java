@@ -1,59 +1,71 @@
 package org.cafedi.clean;
 
-import com.sun.org.apache.xalan.internal.xsltc.dom.Filter;
-
+import org.apache.catalina.core.StandardContext;
+import javax.management.*;
 import java.io.PrintWriter;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 public class ContainerCleaner {
+
     /**
      * 移除所有类型为 filterClass 的 Filter
      */
-    public static void removeFilter(Class<?> filterClass, PrintWriter writer) {
+    @SuppressWarnings("unchecked")
+    public static void removeFilter(Class<?> filterClass, Instrumentation inst, PrintWriter writer) {
         try {
-            //获取standcontext实例
-            Class<?> contextClz = Class.forName("org.apache.catalina.core.StandardContext");
-            // filterConfigs 字段对象
-            Field configField = contextClz.getDeclaredField("filterConfigs");
-            configField.setAccessible(true);
-            // 获取当前 webapp 的 StandardContext 实例
-            Object standcontext = getStandContext();
-            //获取对象动态字段值，从拿到的 StandardContext 实例中，读取出filterConfigs 这个 Map,这个 Map 的 键 是 Filter 名称,值是ApplicationFilterConfig 对象
-            Map<String,Object> filterConfigs = (Map<String,Object>)configField.get(standcontext);
-            //反射拿到真正的 Filter 实例：ApplicationFilterConfig 包含一个私有字段 filter，即你自定义或内存马注册的 Filter 对象。
-            Iterator<Map.Entry<String,Object>> iterator = filterConfigs.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String,Object> entry = iterator.next();
-                Object config = entry.getValue();
-                Field filterField = config.getClass().getDeclaredField("filter");
+            // 1. 找到 StandardContext 的 Class 对象和对应的 ClassLoader
+            Class<?> standardContextClass = null;
+            ClassLoader webappCl = null;
+            for (Class<?> clz : inst.getAllLoadedClasses()) {
+                if ("org.apache.catalina.core.StandardContext".equals(clz.getName())) {
+                    standardContextClass = clz;
+                    break;
+                }
+            }
+            for (Class<?> load : inst.getAllLoadedClasses()) {
+                writer.println("load: " + load.getClassLoader());
+                if ("org.apache.catalina.loader.WebappClassLoaderBase".equals(load.getClassLoader())) {
+                    webappCl = load.getClassLoader();
+                    break;
+                }
+            }
+            writer.println("standardContextClass=" + standardContextClass);
+            writer.println("webappCl=" + webappCl);
+            if (standardContextClass == null || webappCl == null) {
+                throw new IllegalStateException("StandardContext 未加载或 Tomcat 版本不匹配");
+            }
+            // 2. 通过 WebappClassLoaderBase 的私有字段 'context' 拿到 StandardContext 实例
+            Field ctxField = webappCl.getClass().getDeclaredField("context");
+            ctxField.setAccessible(true);
+            StandardContext ctx = (StandardContext) ctxField.get(webappCl);
+            writer.println("[*] Obtained StandardContext: " + ctx.getName());
+
+            // 3. 获取 filterConfigs 字段并遍历移除目标 Filter
+            Field configsField = standardContextClass.getDeclaredField("filterConfigs");
+            configsField.setAccessible(true);
+            Map<String, Object> filterConfigs = (Map<String, Object>) configsField.get(ctx);
+
+            Iterator<Map.Entry<String, Object>> it = filterConfigs.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, Object> entry = it.next();
+                Object cfg = entry.getValue();
+                Field filterField = cfg.getClass().getDeclaredField("filter");
                 filterField.setAccessible(true);
-                Filter f = (Filter) filterField.get(config);
-                // 判断此 Filter 是否为我们要清除的内存马
-                if (f.getClass().equals(filterClass)) {
-                    iterator.remove();
-                    writer.println("[+][Filter Shell] Removed Filter: " + entry.getKey());
+                Object filterObj = filterField.get(cfg);
+
+                if (filterClass.equals(filterObj.getClass())) {
+                    it.remove();
+                    writer.println("[+][FilterShell] Removed Filter: " + entry.getKey());
                 }
             }
+
+        } catch (Exception e) {
+            writer.println("[!] filter 内存马清除失败: " + filterClass.getName());
+            e.printStackTrace(writer);
         }
-        catch (Exception e) {
-            writer.println("[!] Failed to remove filter: " + filterClass.getName());
-            e.printStackTrace();
-        }
-    }
-    //通过当前线程栈匹配获取 StandardContext 对象
-    private static Object getStandContext() throws ClassNotFoundException, NoSuchFieldException, IllegalAccessException {
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
-            for (StackTraceElement elem : t.getStackTrace()) {
-                if (elem.getClassName().contains("ApplicationFilterChain")) {
-                    Class<?> chainClz = Class.forName(elem.getClassName());
-                    Field contextField = chainClz.getDeclaredField("context");
-                    contextField.setAccessible(true);
-                    return contextField.get(null);
-                }
-            }
-        }
-        throw new IllegalStateException("StandardContext not found");
     }
 }
