@@ -2,17 +2,15 @@ package org.cafedi;
 
 import org.cafedi.asm.BytecodeDumper;
 import org.cafedi.asm.MemShellASMAnalyzer;
-import org.cafedi.asm.Test;
 import org.cafedi.clean.CleanUp;
 
 import java.io.*;
 import java.lang.instrument.Instrumentation;
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +20,8 @@ public class MemShellScannerAgent {
     public static void agentmain(String args, Instrumentation inst) throws IOException {
         //创建一个socket连接，监听8899端口
         eightNine_socket = new Socket("127.0.0.1", 8899);
-        writer = new PrintWriter(eightNine_socket.getOutputStream(), true);
+        writer = new PrintWriter(new OutputStreamWriter(eightNine_socket.getOutputStream(), StandardCharsets.UTF_8), true);
+        //writer.println("Agent defaultCharset=" + java.nio.charset.Charset.defaultCharset());
         //启动命令监听线程
         startCommandListener(inst);
         try {

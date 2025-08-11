@@ -1,0 +1,20 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Kill_Memshell:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Kill_Memshell_jar</output-path>
+    <root id="archive" name="Kill_Memshell.jar">
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/gui/src/META-INF/MANIFEST.MF" />
+      </element>
+      <element id="module-output" name="gui" />
+      <element id="module-output" name="core" />
+      <element id="module-output" name="agent" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/org/ow2/asm/asm-analysis/9.5/asm-analysis-9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="C:/Program Files/Java/jdk1.8.0_65/lib/tools.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/org/ow2/asm/asm-tree/9.5/asm-tree-9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/org/ow2/asm/asm-commons/9.5/asm-commons-9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/org/ow2/asm/asm-util/9.5/asm-util-9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/org/ow2/asm/asm/9.5/asm-9.5.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../../Maven/maven_repository/javax/servlet/javax.servlet-api/4.0.1/javax.servlet-api-4.0.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

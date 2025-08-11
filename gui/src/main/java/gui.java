@@ -3,6 +3,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +38,14 @@ import static java.util.List.*;
  * @author DZ
  */
 public class gui extends JFrame {
+    // 单例 SocketServer 线程和对象，防止重复启动
+    private Thread srvThread;
+    private SocketServer socketServer;
+    private final int UI_PORT = 8899;   // UI 监听端口（agent 发消息到 UI）
+    private Thread cleanSrvThread;
+    private SocketServer cleanSocketServer;
+    private final int AGENT_CMD_PORT = 9900; // Agent 接收清除命令端口（如果 agent 需要监听，可选）
+    private PrintWriter out;
     public gui() {
         setTitle("Kill That Memshell By CafedDi");
         initComponents();
@@ -131,9 +140,22 @@ public class gui extends JFrame {
                 }
             });
         };
-        Thread srvThread = new Thread(new SocketServer(router), "SockSrv");
-        srvThread.setDaemon(true);
-        srvThread.start();
+        //只在未启动时启动 SocketServer，检测端口是否被占用
+        if (srvThread == null || !srvThread.isAlive()) {
+            if (!isPortAvailable(UI_PORT)){
+                statusTextArea.append("[!] 端口 " + UI_PORT + " 已被占用，跳过 SocketServer 启动（若是上次已启动的实例，请确保它正常运行）。\n");
+            }
+            else {
+                socketServer = new SocketServer(router);
+                srvThread = new Thread(socketServer, "SockSrv");
+                srvThread.setDaemon(true);
+                srvThread.start();
+                statusTextArea.append("[*] SocketServer 已启动，监听端口 " + UI_PORT + "\n");
+            }
+        }
+        else {
+            statusTextArea.append("[*] SocketServer 已在运行。\n");
+        }
         //获取选中的行索引
         int selectedRow = jvmTable.getSelectedRow();
         if(selectedRow!=-1){
@@ -143,8 +165,10 @@ public class gui extends JFrame {
             String param = value.toString();
             //日志显示
             statusTextArea.append("开始Attach进程"+param+"\n");
+            //statusTextArea.append("GUI defaultCharset=" + java.nio.charset.Charset.defaultCharset());
             VirtualMachine vm = VirtualMachine.attach(param);
-            Path agentpath = Paths.get("agent/target/MemShellScannerAgent-1.0-SNAPSHOT.jar");
+            //Path agentpath = Paths.get("agent/target/MemShellScannerAgent-1.0-SNAPSHOT.jar");
+            Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
             String path = "";
             if (Files.exists(agentpath)){
                 path = agentpath.toAbsolutePath().toString();
@@ -190,12 +214,35 @@ public class gui extends JFrame {
             statusTextArea.append(ex.getMessage());
         }
     }
-    private void cleanMemShell(String target) {
+    private void cleanMemShell(String target) throws IOException {
         if (!target.startsWith("[")) {
             JOptionPane.showMessageDialog(this,"请按照格式 [filter/servlet/...]classname 输入要清除的内存马类名");
             return;
         }
         //statusTextArea.append("开始清除："+target+"\n");
+        // SocketServer 端口检测和启动
+        if (cleanSrvThread == null || !cleanSrvThread.isAlive()){
+            if (isPortAvailable(AGENT_CMD_PORT)){
+                statusTextArea.append("[!] 端口 " + AGENT_CMD_PORT + " 已被占用，跳过 SocketServer 启动（可能已有实例在运行）。\n");
+            }
+            else {
+                Socket agentsocket = new Socket("127.0.0.1", AGENT_CMD_PORT);
+                cleanSrvThread = new Thread(cleanSocketServer, "CleanSockSrv");
+                out = new PrintWriter(agentsocket.getOutputStream(), true);
+                cleanSrvThread.setDaemon(true);
+                cleanSrvThread.start();
+                statusTextArea.append("[*] 清除功能 SocketServer 已启动，监听端口 " + AGENT_CMD_PORT + "\n");
+            }
+        }
+        else {
+            statusTextArea.append("[*] 清除功能 SocketServer 已在运行。\n");
+        }
+        try {
+            out.println("[clean]"+target);
+        }
+        catch (Exception ex) {
+            statusTextArea.append("[!] 发送清除命令失败: " + ex.getMessage() + "\n");
+        }
         new Thread(()->{
             try (Socket socket = new Socket("127.0.0.1", 9900); PrintWriter out = new PrintWriter(socket.getOutputStream(), true)){
                 out.println("[clean]"+target);
@@ -206,6 +253,17 @@ public class gui extends JFrame {
                 );
             }
         }).start();
+    }
+    /**
+     * 简单端口检测：尝试绑定端口，能 bind 则说明可用（随后会自动 close）。
+     */
+    private static boolean isPortAvailable(int port) {
+        try (ServerSocket ss = new ServerSocket(port)) {
+            ss.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     private void initComponents() {
