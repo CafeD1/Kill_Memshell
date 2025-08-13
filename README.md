@@ -11,6 +11,7 @@
 - [安全性与风险说明](#安全性与风险说明)
 - [扩展点](#开发者指南--扩展点)
 - [贡献](#贡献)
+- [本地测试](#本地测试)
 - [联系方式](#联系方式)
 
 ---
@@ -151,6 +152,9 @@ java -jar MemShellScannerAgent-1.0-SNAPSHOT.jar
 - 提供远程集中管理与多 Agent 会话汇总功能。
 
 ---
+
+## 本地测试
+本地测试环境：https://github.com/CafeD1/MemshellCode
 
 ## 贡献
 
