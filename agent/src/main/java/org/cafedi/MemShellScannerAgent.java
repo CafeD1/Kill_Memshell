@@ -104,6 +104,14 @@ public class MemShellScannerAgent {
             }
         }, "Agent-Command-Listener").start();
     }
+    private static  boolean isPortAvailable() {
+        try (ServerSocket testSocket = new ServerSocket(9900)) {
+            testSocket.setReuseAddress(true);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
     public static void main(String[] args) {
 
     }

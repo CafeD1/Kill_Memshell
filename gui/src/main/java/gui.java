@@ -3,6 +3,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Executable;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -10,6 +11,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import javax.swing.*;
 import javax.swing.border.*;
@@ -42,10 +45,13 @@ public class gui extends JFrame {
     private Thread srvThread;
     private SocketServer socketServer;
     private final int UI_PORT = 8899;   // UI 监听端口（agent 发消息到 UI）
-    private Thread cleanSrvThread;
-    private SocketServer cleanSocketServer;
-    private final int AGENT_CMD_PORT = 9900; // Agent 接收清除命令端口（如果 agent 需要监听，可选）
-    private PrintWriter out;
+    private final int CLEAN_PORT = 9900;
+    // 线程池用于后台任务（attach / socket send / 列表刷新等）
+    private final ExecutorService executor = Executors.newCachedThreadPool(r -> {
+        Thread t = new Thread(r, "gui-worker-" + r.hashCode());
+        t.setDaemon(true);
+        return t;
+    });
     public gui() {
         setTitle("Kill That Memshell By CafedDi");
         initComponents();
@@ -54,10 +60,10 @@ public class gui extends JFrame {
         // 设置单选模式
         FrameList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
-
     public static void main(String[] args) {
         new gui().setVisible(true);
     }
+    /* ========== JVM 列表 ========== */
     private void GetJVMProcess(ActionEvent e) {
         statusTextArea.append("正在获取JVM进程列表...\n");
         JvmProcessList jvm = new JvmProcessList();
@@ -95,7 +101,7 @@ public class gui extends JFrame {
         statusTextArea.append("已加载"+jvmentries.size()+"个进程\n");
 
     }
-
+    /* ========== 点击显示详情  ========== */
     private void jvmTableMouseClicked(MouseEvent e) {
         if(e.getClickCount()==2){
             int row = jvmTable.rowAtPoint(e.getPoint());
@@ -115,14 +121,41 @@ public class gui extends JFrame {
             );
         }
     }
-
+    /* ========== Attach 逻辑  ========== */
     private void attach(ActionEvent e) throws IOException, AttachNotSupportedException, AgentLoadException, AgentInitializationException {
-        //开始监听socket
-        //面板列表
-//        List<JTextArea> outList = Arrays.asList(statusTextArea,filterTextArea);
-//        new SocketServer(outList).start();
-        //new SocketServer(statusTextArea).start();
-        // 1. 定义一个“路由”函数：接收每一行消息，并分发到相应的 JTextArea
+        // 先确保 SocketServer 启动（非阻塞）
+        startSocketServerIfNeeded();
+        int selectedRow = jvmTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "请先选择表格中的一行");
+            return;
+        }
+        Object value = jvmTable.getValueAt(selectedRow, 0);
+        String param = value.toString();
+        // 在后台执行 attach 与 loadAgent（避免阻塞 UI）
+        executor.execute(() -> {
+            statusTextArea.append("开始 Attach 进程 " + param+"\n");
+            try {
+                VirtualMachine vm = VirtualMachine.attach(param);
+                Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
+                if (!Files.exists(agentpath)) {
+                    statusTextArea.append("[!] agent 文件不存在: " + agentpath.toAbsolutePath()+"\n");
+                    vm.detach();
+                    return;
+                }
+                vm.loadAgent(agentpath.toAbsolutePath().toString(), "agent");
+                vm.detach();
+                statusTextArea.append("[*] Attach 并注入 Agent 完成: " + param+"\n");
+            } catch (AttachNotSupportedException | AgentLoadException | AgentInitializationException ex) {
+                statusTextArea.append("[!] Attach 失败: " + ex.getMessage()+"\n");
+            } catch (IOException ex) {
+                statusTextArea.append("[!] IO 错误: " + ex.getMessage()+"\n");
+            }
+        });
+    }
+    /* ========== SocketServer 启动（只启动一次） ========== */
+    private  void startSocketServerIfNeeded(){
+        // router 把消息分发到不同文本区
         Consumer<String> router = msg -> {
             // 2. 所有对 Swing 组件的修改都必须在 EDT（事件调度线程）里执行
             SwingUtilities.invokeLater(() -> {
@@ -140,7 +173,6 @@ public class gui extends JFrame {
                 }
             });
         };
-        //只在未启动时启动 SocketServer，检测端口是否被占用
         if (srvThread == null || !srvThread.isAlive()) {
             if (!isPortAvailable(UI_PORT)){
                 statusTextArea.append("[!] 端口 " + UI_PORT + " 已被占用，跳过 SocketServer 启动（若是上次已启动的实例，请确保它正常运行）。\n");
@@ -151,39 +183,12 @@ public class gui extends JFrame {
                 srvThread.setDaemon(true);
                 srvThread.start();
                 statusTextArea.append("[*] SocketServer 已启动，监听端口 " + UI_PORT + "\n");
-            }
-        }
-        else {
-            statusTextArea.append("[*] SocketServer 已在运行。\n");
-        }
-        //获取选中的行索引
-        int selectedRow = jvmTable.getSelectedRow();
-        if(selectedRow!=-1){
-            // 获取第一列（索引为 0）的值,即PID
-            Object value = jvmTable.getValueAt(selectedRow,0);
-            //转为字符串参数
-            String param = value.toString();
-            //日志显示
-            statusTextArea.append("开始Attach进程"+param+"\n");
-            //statusTextArea.append("GUI defaultCharset=" + java.nio.charset.Charset.defaultCharset());
-            VirtualMachine vm = VirtualMachine.attach(param);
-            //Path agentpath = Paths.get("agent/target/MemShellScannerAgent-1.0-SNAPSHOT.jar");
-            Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
-            String path = "";
-            if (Files.exists(agentpath)){
-                path = agentpath.toAbsolutePath().toString();
-            }else{
-                statusTextArea.append("请检查agent文件是否存在");
-                return;
-            }
-            vm.loadAgent(path,"agent");
-            vm.detach();
-
-        }else {
-            JOptionPane.showMessageDialog(null,"请先选择表格中的一行");
+                }
+                }
+        else{
+            statusTextArea.append("[*] SocketServer 已在运行。"+"\n");
         }
     }
-
     private void FrameListValueChanged(ListSelectionEvent e) {
         if(e.getValueIsAdjusting()){
             //获取选择
@@ -200,59 +205,39 @@ public class gui extends JFrame {
             }
        }
     }
-    //读取用户输入的类名并清除内存马
+    /* ========== 清除内存马逻辑：验证输入、后台发送命令 ========== */
     private void memClean(ActionEvent e) {
-        try {
-            String targetClassName = cleanClassName.getText().trim();
-            if(targetClassName.isEmpty()){
-                JOptionPane.showMessageDialog(this, "请输入要清除的内存马类名或文件名");
-                return;
-            }
-            cleanMemShell(targetClassName);
-        }
-        catch (Exception ex) {
-            statusTextArea.append(ex.getMessage());
-        }
-    }
-    private void cleanMemShell(String target) throws IOException {
-        if (!target.startsWith("[")) {
-            JOptionPane.showMessageDialog(this,"请按照格式 [filter/servlet/...]classname 输入要清除的内存马类名");
+        String targetClassName = cleanClassName.getText().trim();
+        if (targetClassName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "请输入要清除的内存马类名或文件名");
             return;
         }
-        //statusTextArea.append("开始清除："+target+"\n");
-        // SocketServer 端口检测和启动
-        if (cleanSrvThread == null || !cleanSrvThread.isAlive()){
-            if (isPortAvailable(AGENT_CMD_PORT)){
-                statusTextArea.append("[!] 端口 " + AGENT_CMD_PORT + " 已被占用，跳过 SocketServer 启动（可能已有实例在运行）。\n");
-            }
-            else {
-                Socket agentsocket = new Socket("127.0.0.1", AGENT_CMD_PORT);
-                cleanSrvThread = new Thread(cleanSocketServer, "CleanSockSrv");
-                out = new PrintWriter(agentsocket.getOutputStream(), true);
-                cleanSrvThread.setDaemon(true);
-                cleanSrvThread.start();
-                statusTextArea.append("[*] 清除功能 SocketServer 已启动，监听端口 " + AGENT_CMD_PORT + "\n");
-            }
+        // 输入格式校验
+        if (!targetClassName.startsWith("[")) {
+            JOptionPane.showMessageDialog(this, "请按照格式 [filter/servlet/...]classname 输入要清除的内存马类名");
+            return;
         }
-        else {
-            statusTextArea.append("[*] 清除功能 SocketServer 已在运行。\n");
+        // 提交给后台发送清除命令
+        sendCleanCommand(targetClassName);
+    }
+    private void sendCleanCommand(String target) {
+        // 优先检测是否有 socket server （逻辑修正：isPortAvailable true 表示可用 => 没有其他进程监听）
+        if (isPortAvailable(CLEAN_PORT)) {
+            statusTextArea.append("[!] 未检测到清除端口 " + CLEAN_PORT + " 的服务，请确认目标进程是否已启动清理端口。"+"\n");
+            // 仍可尝试发起连接（若你希望直接尝试可以移除 return）
+            // return;
         }
-        try {
-            out.println("[clean]"+target);
-        }
-        catch (Exception ex) {
-            statusTextArea.append("[!] 发送清除命令失败: " + ex.getMessage() + "\n");
-        }
-        new Thread(()->{
-            try (Socket socket = new Socket("127.0.0.1", 9900); PrintWriter out = new PrintWriter(socket.getOutputStream(), true)){
-                out.println("[clean]"+target);
+        executor.execute(() -> {
+            String payload = "[clean]" + target;
+            statusTextArea.append("尝试发送清除命令: " + payload+"\n");
+            try (Socket socket = new Socket("127.0.0.1", CLEAN_PORT);
+                 PrintWriter writer = new PrintWriter(socket.getOutputStream(), true)) {
+                writer.println(payload);
+                statusTextArea.append("[*] 清除命令已发送"+"\n");
+            } catch (Exception ex) {
+                statusTextArea.append("[!] 发送清除命令失败: " + ex.getMessage()+"\n");
             }
-            catch (Exception ex) {
-                SwingUtilities.invokeLater(() ->
-                        statusTextArea.append("[!] 发送清除命令失败: " + ex.getMessage() + "\n")
-                );
-            }
-        }).start();
+        });
     }
     /**
      * 简单端口检测：尝试绑定端口，能 bind 则说明可用（随后会自动 close）。
