@@ -91,19 +91,23 @@ mvn clean package
 
 项目结构->工件
 
-<img src="img/image-20250811153645528.png" alt="image-20250811153645528" style="zoom:67%;" />
+<img width="1026" height="861" alt="image-20250811153645528" src="https://github.com/user-attachments/assets/09e010dd-203d-422f-ad8e-034c98dfff44" />
+
 
 构建工件
 
-![image-20250811153806724](img/image-20250811153806724.png)
+<img width="375" height="220" alt="image-20250811153806724" src="https://github.com/user-attachments/assets/13f922b5-7a29-4fdf-9b75-f4e771dd57d2" />
+
 
 Agent端
 
-<img src="img/image-20250811153926656.png" alt="image-20250811153926656" style="zoom: 80%;" />
+<img width="602" height="472" alt="image-20250811153926656" src="https://github.com/user-attachments/assets/83255a13-f820-4b97-8262-39522ed72887" />
+
 
 修改gui.java 149行路径代码
 
-<img src="img/image-20250811154020820.png" alt="image-20250811154020820" style="zoom: 80%;" />
+<img width="834" height="88" alt="image-20250811154020820" src="https://github.com/user-attachments/assets/22a5f100-e18f-4d14-8988-0fa7055010fe" />
+
 
 ### 启动 GUI
 
@@ -112,8 +116,9 @@ Agent端
 ```bash
 java -jar MemShellScannerAgent-1.0-SNAPSHOT.jar
 ```
+<img width="774" height="497" alt="image-20250811155714623" src="https://github.com/user-attachments/assets/b528c487-e799-4e11-9fe8-e37ebd0291f9" />
 
-![image-20250811155723868](img/image-20250811155723868.png)
+
 
 ### 扫描与清除
 
