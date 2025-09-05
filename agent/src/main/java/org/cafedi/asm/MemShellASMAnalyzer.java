@@ -1,9 +1,6 @@
 package org.cafedi.asm;
 
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.*;
 
 
 import java.io.PrintWriter;
@@ -105,6 +102,15 @@ public class MemShellASMAnalyzer {
                                }
                            }
                        };
+                   }
+
+                   @Override
+                   public AnnotationVisitor visitAnnotation(String descriptor, boolean visible) {
+                       // 类级别注解检测
+                       if (descriptor.contains("Controller") || descriptor.contains("RestController")){
+                           writer.printf("[Spring Controller Shell] %s 含可疑注解: %s%n", meta.className.replace("/", "."), descriptor);
+                       }
+                       return super.visitAnnotation(descriptor, visible);
                    }
                },0);
            }

@@ -4,6 +4,7 @@ import org.cafedi.asm.BytecodeDumper;
 import org.cafedi.asm.MemShellASMAnalyzer;
 import org.cafedi.clean.CleanUp;
 
+
 import java.io.*;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Method;
@@ -55,7 +56,7 @@ public class MemShellScannerAgent {
                 // 4. 可疑方法判断
                 for (Method m : clazz.getDeclaredMethods()) {
                     String name = m.getName();
-                    if (name.equals("dofilter")) {
+                    if (name.equals("dofilter") || name.equals("doGet") || name.equals("doPost") || name.equals("doPut") || name.equals("doDelete") || name.equals("doHead") || name.equals("doOptions") || name.equals("Trace")) {
                         suspicious = true;
                         //writer.println("[!] Loaded by suspicious Method: " + clazz.getName() + "#" + name);
                     }

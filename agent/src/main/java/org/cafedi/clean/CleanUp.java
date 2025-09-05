@@ -13,6 +13,8 @@ public class CleanUp implements ServletContextListener {
         boolean filterMem = false;
         boolean servletMem = false;
         boolean listenerMem = false;
+        boolean controllerMem = false;
+        boolean intercepterMem = false;
         if (targetClass.contains("filter")){
             filterMem = true;
             targetClass = targetClass.replaceAll("\\[[^\\]]*\\]","");
@@ -23,6 +25,14 @@ public class CleanUp implements ServletContextListener {
         }
         if (targetClass.contains("listener")){
             listenerMem = true;
+            targetClass = targetClass.replaceAll("\\[[^\\]]*\\]","");
+        }
+        if (targetClass.contains("controller")){
+            controllerMem = true;
+            targetClass = targetClass.replaceAll("\\[[^\\]]*\\]","");
+        }
+        if (targetClass.contains("intercepter")){
+            intercepterMem = true;
             targetClass = targetClass.replaceAll("\\[[^\\]]*\\]","");
         }
         //找到所有类名中包含target的Class对象
@@ -46,6 +56,12 @@ public class CleanUp implements ServletContextListener {
             if (listenerMem){
                 writer.println("开始清除listener: " + clazz);
                 //ContainerCleaner.removeListener(clazz,inst,writer);
+            }
+            if (controllerMem){
+                writer.println("开始清除controller: " + clazz);
+            }
+            if (intercepterMem){
+                writer.println("开始清除interceper: " + clazz);
             }
         }
         // 热替换字节码：清空原有实现

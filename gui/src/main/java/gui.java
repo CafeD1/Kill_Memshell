@@ -137,6 +137,7 @@ public class gui extends JFrame {
             statusTextArea.append("开始 Attach 进程 " + param+"\n");
             try {
                 VirtualMachine vm = VirtualMachine.attach(param);
+                //Path agentpath = Paths.get("agent/target/MemShellScannerAgent-1.0-SNAPSHOT.jar");
                 Path agentpath = Paths.get("MemShellScannerAgent-1.0-SNAPSHOT.jar");
                 if (!Files.exists(agentpath)) {
                     statusTextArea.append("[!] agent 文件不存在: " + agentpath.toAbsolutePath()+"\n");
@@ -170,6 +171,12 @@ public class gui extends JFrame {
                 }
                 if (msg.contains("[Listener Shell]")) {
                     listenerTextArea.append(msg+"\n");
+                }
+                if (msg.contains("[Spring Controller Shell]")) {
+                    controllerTextArea.append(msg+"\n");
+                }
+                if (msg.contains("[Intercepter Shell]")) {
+                    interceptorTextArea.append(msg+"\n");
                 }
             });
         };
@@ -275,7 +282,11 @@ public class gui extends JFrame {
         servletTextArea = new JTextArea();
         tabSpringBoot = new JTabbedPane();
         controller = new JPanel();
+        scrollPane7 = new JScrollPane();
+        controllerTextArea = new JTextArea();
         interceptor = new JPanel();
+        scrollPane8 = new JScrollPane();
+        interceptorTextArea = new JTextArea();
         scrollPane1 = new JScrollPane();
         statusTextArea = new JTextArea();
         panel2 = new JPanel();
@@ -436,15 +447,24 @@ attach(e);} catch (IOException ex) {
                     //======== controller ========
                     {
 
+                        //======== scrollPane7 ========
+                        {
+                            scrollPane7.setViewportView(controllerTextArea);
+                        }
+
                         GroupLayout controllerLayout = new GroupLayout(controller);
                         controller.setLayout(controllerLayout);
                         controllerLayout.setHorizontalGroup(
                             controllerLayout.createParallelGroup()
-                                .addGap(0, 358, Short.MAX_VALUE)
+                                .addGroup(GroupLayout.Alignment.TRAILING, controllerLayout.createSequentialGroup()
+                                    .addComponent(scrollPane7, GroupLayout.DEFAULT_SIZE, 352, Short.MAX_VALUE)
+                                    .addContainerGap())
                         );
                         controllerLayout.setVerticalGroup(
                             controllerLayout.createParallelGroup()
-                                .addGap(0, 253, Short.MAX_VALUE)
+                                .addGroup(GroupLayout.Alignment.TRAILING, controllerLayout.createSequentialGroup()
+                                    .addComponent(scrollPane7, GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                                    .addContainerGap())
                         );
                     }
                     tabSpringBoot.addTab(bundle.getString("gui.controller.tab.title"), controller);
@@ -452,15 +472,24 @@ attach(e);} catch (IOException ex) {
                     //======== interceptor ========
                     {
 
+                        //======== scrollPane8 ========
+                        {
+                            scrollPane8.setViewportView(interceptorTextArea);
+                        }
+
                         GroupLayout interceptorLayout = new GroupLayout(interceptor);
                         interceptor.setLayout(interceptorLayout);
                         interceptorLayout.setHorizontalGroup(
                             interceptorLayout.createParallelGroup()
-                                .addGap(0, 358, Short.MAX_VALUE)
+                                .addGroup(GroupLayout.Alignment.TRAILING, interceptorLayout.createSequentialGroup()
+                                    .addGap(0, 0, Short.MAX_VALUE)
+                                    .addComponent(scrollPane8, GroupLayout.PREFERRED_SIZE, 368, GroupLayout.PREFERRED_SIZE))
                         );
                         interceptorLayout.setVerticalGroup(
                             interceptorLayout.createParallelGroup()
-                                .addGap(0, 253, Short.MAX_VALUE)
+                                .addGroup(GroupLayout.Alignment.TRAILING, interceptorLayout.createSequentialGroup()
+                                    .addComponent(scrollPane8, GroupLayout.DEFAULT_SIZE, 247, Short.MAX_VALUE)
+                                    .addContainerGap())
                         );
                     }
                     tabSpringBoot.addTab(bundle.getString("gui.interceptor.tab.title"), interceptor);
@@ -560,7 +589,11 @@ attach(e);} catch (IOException ex) {
     private JTextArea servletTextArea;
     private JTabbedPane tabSpringBoot;
     private JPanel controller;
+    private JScrollPane scrollPane7;
+    private JTextArea controllerTextArea;
     private JPanel interceptor;
+    private JScrollPane scrollPane8;
+    private JTextArea interceptorTextArea;
     private JScrollPane scrollPane1;
     private JTextArea statusTextArea;
     private JPanel panel2;
