@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="cli:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/cli_jar</output-path>
+    <root id="archive" name="cli.jar">
+      <element id="module-output" name="cli" />
+      <element id="module-output" name="core" />
+      <element id="extracted-dir" path="C:/Program Files/Java/jdk1.8.0_65/lib/tools.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

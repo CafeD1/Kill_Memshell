@@ -12,6 +12,7 @@
         <module>gui</module>
         <module>core</module>
         <module>agent</module>
+        <module>cli</module>
     </modules>
 
     <properties>
