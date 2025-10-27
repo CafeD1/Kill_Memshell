@@ -143,15 +143,24 @@ java -jar MemShellScannerAgent-1.0-SNAPSHOT.jar
 ---
 ### CLI命令行模式
 <img width="975" height="164" alt="image" src="https://github.com/user-attachments/assets/875963a4-fc21-42e4-b445-0deda09afd03" />
+
 支持两种模式，检测和清除，检测模式可以不用-t参数，使用--detect-only即可，清除模式需要使用-t参数提供待清除的目标类名，格式与GUI中的类似（[filter/servlet/....]类名）。
 选择检测模式后，会自动检测当前的java进程并输出进程列表，需要手动选择待检测的进程，然后输入agent文件的绝对路径。
+
 <img width="312" height="113" alt="image" src="https://github.com/user-attachments/assets/b58d226f-95e2-4930-a6a3-f2c74d65d35d" />
+
 随后检测结果会输出在命令行界面。
+
 <img width="959" height="386" alt="image" src="https://github.com/user-attachments/assets/b44d8568-83bb-41fa-8732-3f7ee69cccac" />
+
 选择内存马类，使用清除模式即可
+
 <img width="930" height="78" alt="image" src="https://github.com/user-attachments/assets/f59bf877-1563-4662-a6ac-307a5263f698" />
+
 使用方式：
+
 检测： java -jar .\Kill_Memshell.jar --detect-only
+
 清除： java -jar .\Kill_Memshell.jar -t [servlet]org.apache.jsp.servlet_005fshell_jsp --mode clean
 
 ## 安全性与风险说明
